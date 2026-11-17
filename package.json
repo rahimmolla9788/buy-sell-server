@@ -1,0 +1,29 @@
+{
+  "name": "money-app-server",
+  "version": "1.0.0",
+  "description": "Backend API and Webview Dashboard for Money App SMS Backup and Management",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "sms",
+    "backup",
+    "money-app",
+    "rest-api",
+    "webview"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongoose": "^9.11.4",
+    "morgan": "^1.10.0",
+    "socket.io": "^4.8.4",
+    "telegraf": "^4.16.3",
+    "twilio": "^6.2.0"
+  }
+}
