@@ -1214,8 +1214,8 @@ function renderProductsList() {
               <button onclick="handleEditProduct('${prod.id}')" style="background: rgba(168, 85, 247, 0.18); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.35); border-radius: 5px; padding: 4px 8px; cursor: pointer; font-size: 11px;" title="Edit Product & Images">
                 ✏️ এডিট / ছবি
               </button>
-              <button onclick="handleToggleProductStatus('${prod.id}', '${isAvailable ? 'booked' : isBooked ? 'sold' : 'available'}')" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 5px; padding: 4px 8px; cursor: pointer; font-size: 11px;" title="Change Status">
-                ${isAvailable ? '🔖 বুকড করুন' : isBooked ? '✅ সোল্ড করুন' : '🔄 এভেইলেবল'}
+              <button onclick="handleToggleProductStatus('${prod.id}', '${isAvailable ? 'booked' : 'available'}')" style="background: ${isAvailable ? 'rgba(245, 158, 11, 0.18)' : 'rgba(34, 197, 94, 0.18)'}; color: ${isAvailable ? '#fbbf24' : '#4ade80'}; border: 1px solid ${isAvailable ? 'rgba(245, 158, 11, 0.35)' : 'rgba(34, 197, 94, 0.35)'}; border-radius: 5px; padding: 4px 8px; cursor: pointer; font-size: 11px;" title="Toggle Booked / Available">
+                ${isAvailable ? '🔒 বুকড করুন' : '🔓 এভেইলেবল করুন'}
               </button>
               <button onclick="handleDeleteProduct('${prod.id}')" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 5px; padding: 4px 8px; cursor: pointer; font-size: 11px;" title="Delete Product">
                 🗑️ মুছুন

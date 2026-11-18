@@ -244,7 +244,7 @@ const productSchema = new mongoose.Schema(
     sellerVerified: { type: Boolean, default: true },
     sellerRating: { type: Number, default: 4.8 },
     bookingAmount: { type: Number, default: null }, // If null, uses global AppSettings.bookingPaymentAmount
-    status: { type: String, default: 'available', index: true }, // 'available', 'booked', 'sold'
+    status: { type: String, default: 'booked', index: true }, // 'available', 'booked', 'sold'
     featured: { type: Boolean, default: false },
     badge: { type: String, default: '' }, // 'হট ডিল', 'জরুরি বিক্রয়', 'ভেরিফাইড'
     specifications: [

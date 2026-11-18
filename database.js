@@ -456,7 +456,7 @@ class Database {
         sellerVerified: true,
         sellerRating: 4.9,
         bookingAmount: 50,
-        status: 'available',
+        status: 'booked',
         featured: true,
         badge: 'হট ডিল',
         specifications: [
@@ -488,7 +488,7 @@ class Database {
         sellerVerified: true,
         sellerRating: 4.8,
         bookingAmount: 50,
-        status: 'available',
+        status: 'booked',
         featured: true,
         badge: 'জনপ্রিয়',
         specifications: [
@@ -519,7 +519,7 @@ class Database {
         sellerVerified: true,
         sellerRating: 5.0,
         bookingAmount: 50,
-        status: 'available',
+        status: 'booked',
         featured: true,
         badge: 'ভেরিফাইড',
         specifications: [
@@ -550,7 +550,7 @@ class Database {
         sellerVerified: true,
         sellerRating: 4.7,
         bookingAmount: 50,
-        status: 'available',
+        status: 'booked',
         featured: false,
         badge: 'জরুরি বিক্রয়',
         specifications: [
@@ -581,7 +581,7 @@ class Database {
         sellerVerified: true,
         sellerRating: 4.8,
         bookingAmount: 50,
-        status: 'available',
+        status: 'booked',
         featured: false,
         badge: 'হট ডিল',
         specifications: [
@@ -612,7 +612,7 @@ class Database {
         sellerVerified: true,
         sellerRating: 4.9,
         bookingAmount: 50,
-        status: 'available',
+        status: 'booked',
         featured: false,
         badge: 'প্রস্তাবিত',
         specifications: [
@@ -643,7 +643,7 @@ class Database {
         sellerVerified: true,
         sellerRating: 4.6,
         bookingAmount: 50,
-        status: 'available',
+        status: 'booked',
         featured: false,
         badge: 'বাজেট ফ্রেন্ডলি',
         specifications: [
@@ -674,7 +674,7 @@ class Database {
         sellerVerified: true,
         sellerRating: 4.9,
         bookingAmount: 50,
-        status: 'available',
+        status: 'booked',
         featured: false,
         badge: 'হট ডিল',
         specifications: [
@@ -1456,7 +1456,7 @@ class Database {
       sellerVerified: data.sellerVerified !== undefined ? Boolean(data.sellerVerified) : true,
       sellerRating: Number(data.sellerRating) || 4.8,
       bookingAmount: data.bookingAmount !== undefined && data.bookingAmount !== null && !isNaN(Number(data.bookingAmount)) ? Number(data.bookingAmount) : null,
-      status: data.status || 'available',
+      status: data.status || 'booked',
       featured: Boolean(data.featured),
       badge: data.badge || (data.featured ? 'হট ডিল' : ''),
       specifications: Array.isArray(data.specifications) ? data.specifications : [],
