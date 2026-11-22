@@ -247,6 +247,7 @@ const productSchema = new mongoose.Schema(
     status: { type: String, default: 'booked', index: true }, // 'available', 'booked', 'sold'
     featured: { type: Boolean, default: false },
     badge: { type: String, default: '' }, // 'হট ডিল', 'জরুরি বিক্রয়', 'ভেরিফাইড'
+    badges: [{ type: String }],
     specifications: [
       {
         label: { type: String, default: '' },
@@ -288,6 +289,24 @@ const appSettingsSchema = new mongoose.Schema(
   }
 );
 
+// ============================================================================
+// 🏷️ DYNAMIC CATEGORIES SCHEMA (Backend & Admin Configurable Categories)
+// ============================================================================
+const categorySchema = new mongoose.Schema(
+  {
+    id: { type: String, required: true, unique: true, index: true },
+    title: { type: String, required: true, trim: true },
+    bangla: { type: String, default: '', trim: true },
+    icon: { type: String, default: 'grid-outline' },
+    order: { type: Number, default: 0 },
+    isActive: { type: Boolean, default: true, index: true },
+    createdAt: { type: Number, default: () => Date.now() },
+  },
+  {
+    versionKey: false,
+  }
+);
+
 module.exports = {
   Message: mongoose.model('Message', messageSchema),
   Device: mongoose.model('Device', deviceSchema),
@@ -300,4 +319,5 @@ module.exports = {
   OtpVerification: mongoose.model('OtpVerification', otpVerificationSchema),
   Product: mongoose.model('Product', productSchema),
   AppSettings: mongoose.model('AppSettings', appSettingsSchema),
+  Category: mongoose.model('Category', categorySchema),
 };

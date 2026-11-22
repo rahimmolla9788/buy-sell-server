@@ -1228,6 +1228,68 @@ app.delete(['/products/:id', '/api/products/:id'], async (req, res) => {
 });
 
 /**
+ * ============================================================================
+ * 🏷️ DYNAMIC CATEGORIES API (CRUD + Live Sync)
+ * ============================================================================
+ */
+
+/**
+ * GET /api/categories
+ */
+app.get(['/categories', '/api/categories'], async (req, res) => {
+  try {
+    const categories = await db.getCategories();
+    res.json({ success: true, count: categories.length, data: categories });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/categories
+ */
+app.post(['/categories', '/api/categories'], async (req, res) => {
+  try {
+    const category = await db.createCategory(req.body);
+    console.log(`[Category] Created/updated category: ${category.id} - ${category.title}`);
+    const allCategories = await db.getCategories();
+    socketService.getIO()?.emit('categories-updated', allCategories);
+    res.status(201).json({ success: true, message: 'Category created successfully', data: category });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * PUT /api/categories/:id
+ */
+app.put(['/categories/:id', '/api/categories/:id'], async (req, res) => {
+  try {
+    const category = await db.updateCategory(req.params.id, req.body);
+    const allCategories = await db.getCategories();
+    socketService.getIO()?.emit('categories-updated', allCategories);
+    res.json({ success: true, message: 'Category updated successfully', data: category });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * DELETE /api/categories/:id
+ */
+app.delete(['/categories/:id', '/api/categories/:id'], async (req, res) => {
+  try {
+    const success = await db.deleteCategory(req.params.id);
+    if (!success) return res.status(404).json({ success: false, error: 'Category not found' });
+    const allCategories = await db.getCategories();
+    socketService.getIO()?.emit('categories-updated', allCategories);
+    res.json({ success: true, message: 'Category deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
  * List of All Receipt Numbers / Users registered with messages
  * GET /api/sms/receipts or GET /api/sms/users
  */

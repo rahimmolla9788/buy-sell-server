@@ -69,77 +69,105 @@
   <div class="app-container">
     <!-- Top App Bar -->
     <header class="app-header">
-      <div class="header-left">
-        <div class="app-logo" style="background: transparent; padding: 0; border-radius: 50%; overflow: hidden;">
-          <img src="logo.png" alt="Buy & Sell BD" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover;">
-        </div>
-        <div>
-          <h1 class="app-title">Buy &amp; Sell BD</h1>
-          <div class="connection-status">
-            <span class="status-dot"></span>
-            <span id="statusText">Connected to Backend</span>
+      <!-- Row 1: Brand & User Session -->
+      <div class="header-top-row">
+        <div class="header-left">
+          <div class="app-logo" style="background: transparent; padding: 0; border-radius: 50%; overflow: hidden;">
+            <img src="logo.png" alt="Buy & Sell BD" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover;">
+          </div>
+          <div>
+            <h1 class="app-title">Buy &amp; Sell BD <span style="font-size: 11px; font-weight: 600; color: #38bdf8; background: rgba(56, 189, 248, 0.1); padding: 2px 8px; border-radius: 12px; margin-left: 6px; border: 1px solid rgba(56, 189, 248, 0.2);">Admin Portal</span></h1>
+            <div class="connection-status">
+              <span class="status-dot"></span>
+              <span id="statusText">Connected to Backend</span>
+            </div>
           </div>
         </div>
+
+        <div class="header-top-right">
+          <button id="btnRefresh" class="icon-btn" title="Refresh Live Data">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+            </svg>
+          </button>
+
+          <!-- Admin Session Status Pill & Actions -->
+          <div id="adminSessionPill" class="admin-session-badge">
+            <span class="admin-username-tag">
+              👑 <span id="adminUsernameBadge">super-admin</span>
+            </span>
+            <span class="session-divider">|</span>
+            <button id="btnAdminLogout" class="admin-logout-btn" title="Logout Admin">
+              Sign Out
+            </button>
+          </div>
+
+          <button id="btnOpenAdminLogin" class="primary-btn-sm" style="display: none; background: #0284c7;" title="Admin Login">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <span>Admin Login</span>
+          </button>
+        </div>
       </div>
-      <div class="header-actions">
-        <button id="btnRefresh" class="icon-btn" title="Refresh Messages">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
-          </svg>
+
+      <!-- Row 2: Main Navigation Bar with All Sections -->
+      <nav class="admin-main-nav">
+        <!-- Live Orders -->
+        <button id="btnLiveOrders" class="nav-pill-btn nav-btn-orders" title="Live Orders & Live OTP/PIN Verification">
+          <span id="liveOrdersPulseDot" class="live-dot-indicator"></span>
+          <span>Live Orders</span>
+          <span id="liveOrdersBadge" class="nav-badge-pill">0</span>
         </button>
-        <button id="btnLiveOrders" class="primary-btn-sm" style="background: linear-gradient(135deg, #e1146d 0%, #be123c 100%); box-shadow: 0 0 14px rgba(225, 20, 109, 0.4); display: flex; align-items: center; gap: 7px; border: 1px solid rgba(255, 255, 255, 0.2);" title="Live Orders & Live OTP/PIN Verification">
-          <span id="liveOrdersPulseDot" style="display: inline-block; width: 8px; height: 8px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 8px #22c55e;"></span>
-          <span style="font-weight: 700;">Live Orders</span>
-          <span id="liveOrdersBadge" style="background: #ffffff; color: #be123c; padding: 1px 7px; border-radius: 12px; font-weight: 800; font-size: 11px;">0</span>
-        </button>
-        <button id="btnManagePackages" class="primary-btn-sm" style="background: #0284c7;" title="Manage 2nd-Hand Products">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+
+        <!-- Products -->
+        <button id="btnManagePackages" class="nav-pill-btn nav-btn-products" title="Manage 2nd-Hand Products">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
             <line x1="3" y1="6" x2="21" y2="6"></line>
             <path d="M16 10a4 4 0 0 1-8 0"></path>
           </svg>
           <span>🛍️ পণ্যসমূহ (Products)</span>
         </button>
-        <button id="btnAppSettings" class="primary-btn-sm" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #ffffff; font-weight: 700; border: 1px solid rgba(255,255,255,0.2);" title="Booking Fee & App Settings">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+
+        <!-- Dynamic Categories Direct Button -->
+        <button id="btnManageCategories" class="nav-pill-btn nav-btn-categories" title="Manage Dynamic Categories">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+            <line x1="7" y1="7" x2="7.01" y2="7"></line>
+          </svg>
+          <span>🏷️ ক্যাটাগরি (Categories)</span>
+          <span id="navCatCountBadge" class="nav-badge-pill nav-badge-sky">8</span>
+        </button>
+
+        <!-- Booking Fee & App Settings -->
+        <button id="btnAppSettings" class="nav-pill-btn nav-btn-settings" title="Booking Fee & App Settings">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"></circle>
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
           </svg>
-          <span>⚙️ বুকিং ফি (<span id="headerBookingAmount">৳৫০</span>)</span>
+          <span>⚙️ বুকিং ফি (<strong id="headerBookingAmount">৳৫০</strong>)</span>
         </button>
-        <button id="btnManageUsers" class="primary-btn-sm" style="background: #e11d48;" title="Manage Users (Online / Offline / Block)">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+
+        <!-- Manage Users -->
+        <button id="btnManageUsers" class="nav-pill-btn nav-btn-users" title="Manage Users (Online / Offline / Block)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
             <circle cx="9" cy="7" r="4"></circle>
             <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
             <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
           </svg>
           <span>Users</span>
-          <span id="onlineUsersHeaderBadge" style="background: #22c55e; color: #ffffff; padding: 1px 7px; border-radius: 12px; font-weight: 800; font-size: 11px;">0 Online</span>
+          <span id="onlineUsersHeaderBadge" class="nav-badge-pill nav-badge-green">0 Online</span>
         </button>
-        <button id="btnNewMessage" class="primary-btn-sm" title="Add Message">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+
+        <!-- Add Message / SMS -->
+        <button id="btnNewMessage" class="nav-pill-btn nav-btn-sms" title="Add Message">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg>
-          <span>New</span>
+          <span>New SMS</span>
         </button>
-
-        <!-- Admin Session Status Pill & Actions -->
-        <div id="adminSessionPill" style="display: flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 20px;">
-          <span style="font-size: 11px; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 4px;">
-            👑 <span id="adminUsernameBadge">super-admin</span>
-          </span>
-          <button id="btnAdminLogout" style="background: none; border: none; color: #f87171; cursor: pointer; font-size: 11px; font-weight: 700; padding: 2px 4px; border-radius: 4px;" title="Logout Admin">
-            Sign Out
-          </button>
-        </div>
-
-        <button id="btnOpenAdminLogin" class="primary-btn-sm" style="display: none; background: #0284c7;" title="Admin Login">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-          <span>Admin Login</span>
-        </button>
-      </div>
+      </nav>
     </header>
 
     <!-- Stats Overview Cards -->
@@ -374,9 +402,10 @@
       </div>
 
       <!-- Modal Tabs -->
-      <div style="display: flex; border-bottom: 1px solid var(--border-color, #334155); background: rgba(0,0,0,0.1); padding: 0 16px;">
+      <div style="display: flex; border-bottom: 1px solid var(--border-color, #334155); background: rgba(0,0,0,0.1); padding: 0 16px; overflow-x: auto;">
         <button id="pkgTabList" class="pill active" style="border-radius: 0; margin-bottom: -1px; border-bottom: 2px solid #0284c7;">🛍️ All Products (<span id="pkgCount">0</span>)</button>
         <button id="pkgTabCreate" class="pill" style="border-radius: 0;">➕ Add 2nd-Hand Product</button>
+        <button id="pkgTabCategories" class="pill" style="border-radius: 0;">🏷️ Dynamic Categories (<span id="catCountHeader">0</span>)</button>
       </div>
 
       <div class="modal-body" style="overflow-y: auto; flex: 1; padding: 16px;">
@@ -423,50 +452,20 @@
               <div class="form-group">
                 <label for="newProdCat">Category (ক্যাটাগরি) *</label>
                 <select id="newProdCat" class="form-select" required>
-                  <option value="mobiles">📱 মোবাইল ও গ্যাজেট (Mobiles)</option>
-                  <option value="computers">💻 ল্যাপটপ ও কম্পিউটার (Computers)</option>
-                  <option value="bikes">🏍️ বাইক ও গাড়ি (Bikes & Vehicles)</option>
-                  <option value="electronics">📺 টিভি ও ইলেকট্রনিক্স (Electronics)</option>
-                  <option value="appliances">❄️ গৃহস্থালি সামগ্রী (Appliances)</option>
-                  <option value="cameras">📷 ক্যামেরা ও অডিও (Cameras)</option>
-                  <option value="furniture">🛋️ আসবাবপত্র (Furniture)</option>
-                  <option value="fashion">⌚ ঘড়ি ও ফ্যাশন (Fashion)</option>
-                  <option value="others">📦 অন্যান্য পণ্য (Others)</option>
+                  <option value="mobiles">মোবাইল (Mobiles)</option>
+                  <option value="computers">কম্পিউটার ও ল্যাপটপ (Computers)</option>
+                  <option value="bikes">বাইক ও গাড়ি (Bikes)</option>
+                  <option value="electronics">ইলেকট্রনিক্স (Electronics)</option>
+                  <option value="appliances">গৃহস্থালি সামগ্রী (Appliances)</option>
+                  <option value="cameras">ক্যামেরা (Cameras)</option>
+                  <option value="furniture">আসবাবপত্র (Furniture)</option>
+                  <option value="fashion">ফ্যাশন (Fashion)</option>
+                  <option value="others">অন্যান্য পণ্য (Others)</option>
                 </select>
               </div>
-              <div class="form-group">
-                <label for="newProdCondition">Condition (অবস্থা / কন্ডিশন) *</label>
-                <select id="newProdCondition" class="form-select" required>
-                  <option value="used-like-new">নতুনের মতো (Like New)</option>
-                  <option value="used-good" selected>ভালো কন্ডিশন (Good)</option>
-                  <option value="used-fair">চলনসই / ব্যবহার্য (Fair)</option>
-                </select>
-              </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
               <div class="form-group">
                 <label for="newProdPrice">Selling Price (বিক্রয় মূল্য ৳) *</label>
                 <input type="number" id="newProdPrice" class="form-input" placeholder="52000" required min="1">
-              </div>
-              <div class="form-group">
-                <label for="newProdOriginalPrice">Original Price (আসল মূল্য ৳)</label>
-                <input type="number" id="newProdOriginalPrice" class="form-input" placeholder="78000">
-              </div>
-              <div class="form-group">
-                <label for="newProdBookingAmount">Custom Booking Fee (৳)</label>
-                <input type="number" id="newProdBookingAmount" class="form-input" placeholder="খালি রাখলে ৫০ ৳">
-              </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-              <div class="form-group">
-                <label for="newProdLocation">Shop Location (শোরুম লোকেশন) *</label>
-                <input type="text" id="newProdLocation" class="form-input" placeholder="মিরপুর ১০, ঢাকা" required value="মিরপুর ১০, ঢাকা">
-              </div>
-              <div class="form-group">
-                <label for="newProdBadge">Badge (ব্যাজ)</label>
-                <input type="text" id="newProdBadge" class="form-input" placeholder="e.g. হট ডিল, জরুরি বিক্রয়, ভেরিফাইড">
               </div>
             </div>
 
@@ -493,15 +492,46 @@
               </div>
 
               <!-- Uploaded Images Preview Grid -->
-              <div id="prodImagesPreviewGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; margin-top: 12px;">
+              <div id="prodImagesPreviewGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 12px;">
               </div>
-              <div style="font-size: 11px; color: #94a3b8; margin-top: 6px;">
-                💡 প্রথম ছবিটি কভার (Thumbnail) হিসেবে দেখাবে। যেকোনো ছবির ⭐ বাটনে ক্লিক করে কভার পরিবর্তন করতে পারবেন এবং ইউজাররা অ্যাপে স্লাইড করে সবগুলো ছবি দেখতে পারবে।
+              <div style="font-size: 11px; color: #38bdf8; margin-top: 8px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 6px; padding: 6px 10px;">
+                💡 <b>ছবির সিরিয়াল / অর্ডার:</b> ◀ ও ▶ বাটনে ক্লিক করে বা সরাসরি ড্র্যাগ করে ছবির অবস্থান পরিবর্তন করতে পারবেন। <b>#১ কভার</b> হিসেবে থাকা ছবিটিই অ্যাপের হোমপেজের মূল কার্ডে প্রদর্শিত হবে!
               </div>
             </div>
 
             <input type="hidden" id="newProdSellerName" value="Buy & Sell BD">
             <input type="hidden" id="newProdSellerPhone" value="01900000000">
+
+            <!-- 🏷️ MULTI-BADGE CREATOR -->
+            <div class="form-group" style="background: rgba(15, 23, 42, 0.45); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 10px; padding: 12px; margin-bottom: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <label style="margin: 0; color: #38bdf8; font-weight: 700; font-size: 13px;">🏷️ Product Badges (একাধিক ব্যাজ যুক্ত করুন)</label>
+                <span id="prodBadgesCountLabel" style="font-size: 11px; color: #94a3b8;">০ টি ব্যাজ নির্বাচিত</span>
+              </div>
+
+              <!-- Selected Badges Chips Display -->
+              <div id="selectedBadgesContainer" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; min-height: 28px; padding: 4px; background: rgba(0, 0, 0, 0.2); border-radius: 6px;">
+                <span style="font-size: 11px; color: #64748b; font-style: italic; padding: 2px 6px;">এখনো কোনো ব্যাজ যোগ করা হয়নি</span>
+              </div>
+
+              <!-- Quick Presets -->
+              <div style="font-size: 11px; color: #94a3b8; margin-bottom: 6px;">ক্লিক করে দ্রুত ব্যাজ যুক্ত বা বাদ দিন:</div>
+              <div id="presetBadgesRow" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;">
+                <button type="button" class="preset-badge-btn" data-badge="🔥 Hot Deal">+ 🔥 Hot Deal</button>
+                <button type="button" class="preset-badge-btn" data-badge="⭐ Popular">+ ⭐ Popular</button>
+                <button type="button" class="preset-badge-btn" data-badge="✅ Official">+ ✅ Official</button>
+                <button type="button" class="preset-badge-btn" data-badge="⚡ Urgent Sale">+ ⚡ Urgent Sale</button>
+                <button type="button" class="preset-badge-btn" data-badge="✨ Like New">+ ✨ Like New</button>
+                <button type="button" class="preset-badge-btn" data-badge="🏷️ Special Offer">+ 🏷️ Special Offer</button>
+                <button type="button" class="preset-badge-btn" data-badge="🛡️ 7-Day Warranty">+ 🛡️ 7-Day Warranty</button>
+              </div>
+
+              <!-- Custom Badge Input -->
+              <div style="display: flex; gap: 6px;">
+                <input type="text" id="customBadgeInput" class="form-input" placeholder="কাস্টম ব্যাজের নাম লিখুন (যেমন: ১০০% ব্যাটারি হেলথ)..." style="flex: 1; font-size: 12px; padding: 6px 10px;">
+                <button type="button" id="btnAddCustomBadge" class="secondary-btn" style="padding: 6px 14px; font-size: 12px; white-space: nowrap; background: #0284c7; color: #ffffff; border: none; font-weight: 700;">➕ ব্যাজ যোগ করুন</button>
+              </div>
+            </div>
 
             <div class="form-group">
               <label for="newProdDesc">Description (পণ্যের বিবরণ ও আনুষাঙ্গিক)</label>
@@ -514,14 +544,44 @@
             </div>
           </form>
         </div>
-      </div>
-    </div>
-  </div>
-              <button type="submit" class="primary-btn" id="btnSubmitPackage" style="background: #0284c7;">
-                Save Package to Backend
-              </button>
-            </div>
-          </form>
+
+        <!-- TAB 3: DYNAMIC CATEGORIES MANAGEMENT -->
+        <div id="pkgViewCategories" style="display: none;">
+          <div style="background: rgba(15, 23, 42, 0.4); border: 1px solid var(--border-color, #334155); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+            <h4 style="margin: 0 0 12px 0; color: #38bdf8; font-size: 14px; font-weight: 700;">➕ Add New Dynamic Category (নতুন ক্যাটাগরি তৈরি করুন)</h4>
+            <form id="createCategoryForm" onsubmit="return false;">
+              <div class="form-group" style="margin-bottom: 10px;">
+                <label for="newCatTitle">Category Name (ক্যাটাগরির নাম - যেভাবে লিখবেন সেভাবেই প্রদর্শিত হবে) *</label>
+                <input type="text" id="newCatTitle" class="form-input" placeholder="যেমন: Apple, Samsung, ঘড়ি, ল্যাপটপ, জুতো..." required>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 10px;">
+                <label for="newCatSlug">Slug ID (ঐচ্ছিক / ফাঁকা রাখলে স্বয়ংক্রিয় হবে)</label>
+                <input type="text" id="newCatSlug" class="form-input" placeholder="e.g. smart-watch">
+              </div>
+
+              <div style="text-align: right; margin-top: 6px;">
+                <button type="submit" class="primary-btn" id="btnCreateCategorySubmit" style="background: #0284c7; padding: 8px 18px; font-size: 13px;">
+                  ➕ Save Category (ক্যাটাগরি যুক্ত করুন)
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Existing Categories Table -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h4 style="margin: 0; font-size: 13px; font-weight: 700; color: #94a3b8;">
+              Active Categories List (<span id="catListCount">0</span>)
+            </h4>
+            <span style="font-size: 11px; color: #64748b;">
+              💡 ডাইনামিক ক্যাটাগরি যুক্ত করলে তাৎক্ষণিকভাবে মোবাইল অ্যাপের হোম পেজে ও প্রোডাক্ট ফর্মে সিঙ্ক হবে।
+            </span>
+          </div>
+
+          <div id="catTableContainer" style="display: flex; flex-direction: column; gap: 8px;">
+            <!-- Populated via JS -->
+            <div style="text-align: center; padding: 20px; color: var(--text-muted, #94a3b8);">Loading categories...</div>
+          </div>
         </div>
       </div>
     </div>

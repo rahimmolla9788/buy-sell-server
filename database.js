@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const mongoose = require('mongoose');
-const { Message, Device, User, Sim, Package, Metadata, Admin, PaymentOrder, OtpVerification, Product, AppSettings } = require('./models');
+const { Message, Device, User, Sim, Package, Metadata, Admin, PaymentOrder, OtpVerification, Product, AppSettings, Category } = require('./models');
 const config = require('./config');
 const { sendSms } = require('./utils/sms');
 const twilioService = require('./twilio-service');
@@ -252,6 +252,10 @@ class Database {
   async ensureSeeds() {
     await this.ensureAdminUser();
     await this.ensureDefaultSettings();
+    const catCount = await Category.countDocuments();
+    if (catCount === 0) {
+      await this.seedDefaultCategories();
+    }
     const prodCount = await Product.countDocuments();
     if (prodCount === 0) {
       await this.seedDefaultProducts();
@@ -433,6 +437,28 @@ class Database {
     console.log(`[MongoDB] Seeded ${defaults.length} default packages into MongoDB.`);
   }
 
+  async seedDefaultCategories() {
+    const defaults = [
+      { id: 'mobiles', title: 'Mobiles', bangla: 'মোবাইল', icon: 'phone-portrait-outline', order: 1 },
+      { id: 'computers', title: 'Computers', bangla: 'ল্যাপটপ/পিসি', icon: 'laptop-outline', order: 2 },
+      { id: 'bikes', title: 'Bikes & Cars', bangla: 'বাইক/গাড়ি', icon: 'bicycle-outline', order: 3 },
+      { id: 'electronics', title: 'Electronics', bangla: 'টিভি/ইলেকট্রনিক্স', icon: 'tv-outline', order: 4 },
+      { id: 'appliances', title: 'Appliances', bangla: 'গৃহস্থালি', icon: 'snow-outline', order: 5 },
+      { id: 'cameras', title: 'Cameras', bangla: 'ক্যামেরা', icon: 'camera-outline', order: 6 },
+      { id: 'furniture', title: 'Furniture', bangla: 'আসবাবপত্র', icon: 'bed-outline', order: 7 },
+      { id: 'fashion', title: 'Fashion', bangla: 'ঘড়ি ও ফ্যাশন', icon: 'watch-outline', order: 8 },
+    ];
+
+    for (const cat of defaults) {
+      await Category.findOneAndUpdate(
+        { id: cat.id },
+        { $setOnInsert: { ...cat, isActive: true, createdAt: Date.now() } },
+        { upsert: true }
+      );
+    }
+    console.log(`[MongoDB] Ensured ${defaults.length} default categories in MongoDB.`);
+  }
+
   async seedDefaultProducts() {
     const defaults = [
       {
@@ -441,7 +467,7 @@ class Database {
         category: 'mobiles',
         categoryName: 'মোবাইল ও গ্যাজেট',
         price: 52000,
-        originalPrice: 78000,
+        originalPrice: null,
         condition: 'used-like-new',
         conditionLabel: 'নতুনের মতো (Like New)',
         location: 'মিরপুর ১০, ঢাকা',
@@ -451,14 +477,15 @@ class Database {
         ],
         thumbnail: 'https://images.unsplash.com/photo-1632661674596-df8be070a5c5?auto=format&fit=crop&w=800&q=80',
         description: 'অফিসিয়াল ফোন। কোনো দাগ বা স্ক্র্যাচ নেই। ব্যাটারি হেলথ ৮৮%। সাথে অরিজিনাল ক্যাবল, বক্স এবং শপের ক্যাশ মেমো পাবেন। সরাসরি দেখে নিতে পারেন।',
-        sellerName: 'তানভীর আহমেদ',
-        sellerPhone: '01712345678',
+        sellerName: 'Buy & Sell BD',
+        sellerPhone: '01900000000',
         sellerVerified: true,
         sellerRating: 4.9,
         bookingAmount: 50,
         status: 'booked',
         featured: true,
-        badge: 'হট ডিল',
+        badges: ['🔥 Hot Deal', '✅ Official', '✨ Like New'],
+        badge: '🔥 Hot Deal, ✅ Official, ✨ Like New',
         specifications: [
           { label: 'র‌্যাম ও স্টোরেজ', value: '6GB RAM, 128GB Storage' },
           { label: 'ব্যাটারি হেলথ', value: '88% Authentic' },
@@ -474,23 +501,24 @@ class Database {
         category: 'mobiles',
         categoryName: 'মোবাইল ও গ্যাজেট',
         price: 48500,
-        originalPrice: 72000,
+        originalPrice: null,
         condition: 'used-good',
         conditionLabel: 'ভালো কন্ডিশন (Good)',
-        location: 'উত্তরা সেক্টর ৭, ঢাকা',
+        location: 'মিরপুর ১০, ঢাকা',
         images: [
           'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?auto=format&fit=crop&w=800&q=80',
         ],
         thumbnail: 'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?auto=format&fit=crop&w=800&q=80',
         description: 'খুব যত্ন সহকারে ১ বছর ব্যবহার করা হয়েছে। অরিজিনাল এস-পেন সহ আছে। ১০০এক্স জুম ক্যামেরা সম্পূর্ণ নিখুঁত। সাথে ফাস্ট চার্জার দেওয়া হবে।',
-        sellerName: 'হাসানুল করিম',
-        sellerPhone: '01898765432',
+        sellerName: 'Buy & Sell BD',
+        sellerPhone: '01900000000',
         sellerVerified: true,
         sellerRating: 4.8,
         bookingAmount: 50,
         status: 'booked',
         featured: true,
-        badge: 'জনপ্রিয়',
+        badges: ['⭐ Popular', '⚡ Urgent Sale'],
+        badge: '⭐ Popular, ⚡ Urgent Sale',
         specifications: [
           { label: 'র‌্যাম ও রম', value: '12GB / 256GB' },
           { label: 'প্রসেসর', value: 'Snapdragon 8 Gen 1' },
@@ -505,23 +533,24 @@ class Database {
         category: 'computers',
         categoryName: 'ল্যাপটপ ও পিসি',
         price: 64000,
-        originalPrice: 89000,
+        originalPrice: null,
         condition: 'used-like-new',
         conditionLabel: 'নতুনের মতো (Like New)',
-        location: 'ধানমন্ডি ২৭, ঢাকা',
+        location: 'মিরপুর ১০, ঢাকা',
         images: [
           'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?auto=format&fit=crop&w=800&q=80',
         ],
         thumbnail: 'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?auto=format&fit=crop&w=800&q=80',
         description: 'কোডিং এবং গ্রাফিক ডিজাইনের জন্য অসাধারণ ল্যাপটপ। ব্যাটারি সাইকেল কাউন্ট মাত্র ১১২, ব্যাকআপ প্রায় ১২ ঘন্টা। অরিজিনাল ৩০ ওয়াট অ্যাডাপ্টার ও বক্স বিদ্যমান।',
-        sellerName: 'রাকিবুল ইসলাম',
-        sellerPhone: '01911223344',
+        sellerName: 'Buy & Sell BD',
+        sellerPhone: '01900000000',
         sellerVerified: true,
         sellerRating: 5.0,
         bookingAmount: 50,
         status: 'booked',
         featured: true,
-        badge: 'ভেরিফাইড',
+        badges: ['✅ Official', '✨ Like New'],
+        badge: '✅ Official, ✨ Like New',
         specifications: [
           { label: 'চিপসেট', value: 'Apple M1 Chip (8-Core CPU)' },
           { label: 'র‌্যাম / স্টোরেজ', value: '8GB Unified / 256GB SSD' },
@@ -536,23 +565,24 @@ class Database {
         category: 'bikes',
         categoryName: 'বাইক ও গাড়ি',
         price: 142000,
-        originalPrice: 215000,
+        originalPrice: null,
         condition: 'used-good',
         conditionLabel: 'ভালো কন্ডিশন (Good)',
-        location: 'মোহাম্মদপুর, ঢাকা',
+        location: 'মিরপুর ১০, ঢাকা',
         images: [
           'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=800&q=80',
         ],
         thumbnail: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=800&q=80',
         description: 'ঢাকা মেট্রো ল সিরিয়াল, ১৮,০০০ কিমি রানিং। প্রতি লিটারে ৪০+ মাইলেজ। ডিজিটাল নাম্বার প্লেট এবং স্মার্ট কার্ড প্রস্তুত। ২ বছরের ট্যাক্স টোকেন আপডেটেড। কোনো এক্সিডেন্ট হিস্ট্রি নেই।',
-        sellerName: 'মেহেদী হাসান',
-        sellerPhone: '01655443322',
+        sellerName: 'Buy & Sell BD',
+        sellerPhone: '01900000000',
         sellerVerified: true,
         sellerRating: 4.7,
         bookingAmount: 50,
         status: 'booked',
         featured: false,
-        badge: 'জরুরি বিক্রয়',
+        badges: ['🔥 Hot Deal', '⭐ Popular'],
+        badge: '🔥 Hot Deal, ⭐ Popular',
         specifications: [
           { label: 'ইঞ্জিন ক্ষমতা', value: '149cc Fuel Injection' },
           { label: 'রানিং', value: '18,200 KM' },
@@ -567,23 +597,24 @@ class Database {
         category: 'electronics',
         categoryName: 'ইলেকট্রনিক্স ও টিভি',
         price: 28000,
-        originalPrice: 42000,
+        originalPrice: null,
         condition: 'used-like-new',
         conditionLabel: 'নতুনের মতো (Like New)',
-        location: 'বাড্ডা লিংক রোড, ঢাকা',
+        location: 'মিরপুর ১০, ঢাকা',
         images: [
           'https://images.unsplash.com/photo-1593784991095-a205069470b6?auto=format&fit=crop&w=800&q=80',
         ],
         thumbnail: 'https://images.unsplash.com/photo-1593784991095-a205069470b6?auto=format&fit=crop&w=800&q=80',
         description: '১০০% অরিজিনাল সনি ব্রাভিয়া টিভি। ডলবি অডিও ও ট্রিলুমিনাস ডিসপ্লে। ইউটিউব, নেটফ্লিক্স স্মুথলি চলে। সাথে ভয়েস কন্ট্রোল রিমোট ও ওয়াল মাউন্ট হ্যাঙ্গার দেওয়া হবে।',
-        sellerName: 'ফারহান চৌধুরী',
-        sellerPhone: '01533221100',
+        sellerName: 'Buy & Sell BD',
+        sellerPhone: '01900000000',
         sellerVerified: true,
         sellerRating: 4.8,
         bookingAmount: 50,
         status: 'booked',
         featured: false,
-        badge: 'হট ডিল',
+        badges: ['🔥 Hot Deal', '✨ Like New'],
+        badge: '🔥 Hot Deal, ✨ Like New',
         specifications: [
           { label: 'স্ক্রিন সাইজ', value: '43 Inch 4K UHD' },
           { label: 'সাউন্ড', value: 'Dolby Audio 20W' },
@@ -598,23 +629,24 @@ class Database {
         category: 'cameras',
         categoryName: 'ক্যামেরা ও অডিও',
         price: 38000,
-        originalPrice: 55000,
+        originalPrice: null,
         condition: 'used-like-new',
         conditionLabel: 'নতুনের মতো (Like New)',
-        location: 'ফার্মগেট, ঢাকা',
+        location: 'মিরপুর ১০, ঢাকা',
         images: [
           'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80',
         ],
         thumbnail: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80',
         description: 'শর্টার কাউন্ট মাত্র ৪,৫০০। ভ্লগিং এবং ফটোশ্যুটের জন্য বেস্ট রোটেটিং টাচস্ক্রিন ডিসপ্লে ও 4K ভিডিও রেকর্ডিং সুবিধা। সাথে ৬০ ফ্রেম ভিডিও সাপোর্ট, ব্যাগ ও ৩২জিবি মেমোরি কার্ড।',
-        sellerName: 'সাইফুল ইসলাম',
-        sellerPhone: '01799887766',
+        sellerName: 'Buy & Sell BD',
+        sellerPhone: '01900000000',
         sellerVerified: true,
         sellerRating: 4.9,
         bookingAmount: 50,
         status: 'booked',
         featured: false,
-        badge: 'প্রস্তাবিত',
+        badges: ['⚡ Urgent Sale', '🏷️ Special Offer'],
+        badge: '⚡ Urgent Sale, 🏷️ Special Offer',
         specifications: [
           { label: 'সেন্সর', value: '24.1MP APS-C CMOS' },
           { label: 'ভিডিও', value: '4K UHD, Dual Pixel AF' },
@@ -629,23 +661,24 @@ class Database {
         category: 'appliances',
         categoryName: 'গৃহস্থালি সামগ্রী',
         price: 29500,
-        originalPrice: 46000,
+        originalPrice: null,
         condition: 'used-good',
         conditionLabel: 'ভালো কন্ডিশন (Good)',
-        location: 'মিরপুর ২, ঢাকা',
+        location: 'মিরপুর ১০, ঢাকা',
         images: [
           'https://images.unsplash.com/photo-1614633833026-06204043b27b?auto=format&fit=crop&w=800&q=80',
         ],
         thumbnail: 'https://images.unsplash.com/photo-1614633833026-06204043b27b?auto=format&fit=crop&w=800&q=80',
         description: 'ইনভার্টার টেকনোলজি তাই বিদ্যুৎ খরচ ৬০% পর্যন্ত কম। খুব দ্রুত ঘর ঠান্ডা করে। গত বছর মে মাসে কেনা হয়েছিল, এখনো সার্ভিস ওয়ারেন্টি বিদ্যমান। সাথে ১০ ফুট কপার পাইপ পাবেন।',
-        sellerName: 'জাকির হোসেন',
-        sellerPhone: '01811447788',
+        sellerName: 'Buy & Sell BD',
+        sellerPhone: '01900000000',
         sellerVerified: true,
         sellerRating: 4.6,
         bookingAmount: 50,
         status: 'booked',
         featured: false,
-        badge: 'বাজেট ফ্রেন্ডলি',
+        badges: ['🛡️ 7-Day Warranty', '⭐ Popular'],
+        badge: '🛡️ 7-Day Warranty, ⭐ Popular',
         specifications: [
           { label: 'ক্যাপাসিটি', value: '1.5 Ton (18,000 BTU)' },
           { label: 'কম্প্রেসার', value: 'Dual Inverter Rotary' },
@@ -660,23 +693,24 @@ class Database {
         category: 'fashion',
         categoryName: 'ঘড়ি ও ফ্যাশন',
         price: 21000,
-        originalPrice: 35000,
+        originalPrice: null,
         condition: 'used-like-new',
         conditionLabel: 'নতুনের মতো (Like New)',
-        location: 'গুলশান ১, ঢাকা',
+        location: 'মিরপুর ১০, ঢাকা',
         images: [
           'https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=800&q=80',
         ],
         thumbnail: 'https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=800&q=80',
         description: 'অরিজিনাল অ্যাপল ওয়াচ ৭, কোনো ডেন্ট নেই। অলওয়েজ-অন রেটিনা ডিসপ্লে, ইসিজি ও ব্লাড অক্সিজেন সেন্সর একটিভ। সাথে অরিজিনাল ফাস্ট চার্জার ও ২টি এক্সট্রা বেল্ট উপহার।',
-        sellerName: 'নাঈম রহমান',
-        sellerPhone: '01722334455',
+        sellerName: 'Buy & Sell BD',
+        sellerPhone: '01900000000',
         sellerVerified: true,
         sellerRating: 4.9,
         bookingAmount: 50,
         status: 'booked',
         featured: false,
-        badge: 'হট ডিল',
+        badges: ['🔥 Hot Deal', '✅ Official'],
+        badge: '🔥 Hot Deal, ✅ Official',
         specifications: [
           { label: 'সাইজ', value: '45mm Midnight Case' },
           { label: 'সেন্সর', value: 'ECG, SpO2, Heart Rate' },
@@ -1420,31 +1454,33 @@ class Database {
     const id = data.id || `prod-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
     const category = (data.category || 'others').toLowerCase();
 
-    const catNames = {
-      mobiles: 'মোবাইল ও গ্যাজেট',
-      computers: 'ল্যাপটপ ও পিসি',
-      bikes: 'বাইক ও গাড়ি',
-      electronics: 'ইলেকট্রনিক্স ও টিভি',
-      appliances: 'গৃহস্থালি সামগ্রী',
-      cameras: 'ক্যামেরা ও অডিও',
-      furniture: 'আসবাবপত্র',
-      fashion: 'ঘড়ি ও ফ্যাশন',
-      others: 'অন্যান্য পণ্য',
-    };
+    let categoryName = data.categoryName ? data.categoryName.trim() : '';
+    if (!categoryName) {
+      try {
+        const foundCat = await Category.findOne({ id: category }).lean();
+        if (foundCat && (foundCat.title || foundCat.bangla)) {
+          categoryName = foundCat.title || foundCat.bangla;
+        } else {
+          categoryName = data.category || 'Others';
+        }
+      } catch (e) {
+        categoryName = data.category || 'Others';
+      }
+    }
 
     const conditionLabels = {
-      'used-like-new': 'নতুনের মতো (Like New)',
-      'used-good': 'ভালো কন্ডিশন (Good)',
-      'used-fair': 'মোটামুটি / ব্যবহার্য (Fair)',
+      'used-like-new': 'Like New',
+      'used-good': 'Good',
+      'used-fair': 'Fair',
     };
 
     return await Product.create({
       id,
       title: data.title.trim(),
       category,
-      categoryName: data.categoryName || catNames[category] || 'সাধারণ পণ্য',
+      categoryName,
       price: Number(data.price),
-      originalPrice: data.originalPrice ? Number(data.originalPrice) : null,
+      originalPrice: null,
       condition: data.condition || 'used-good',
       conditionLabel: data.conditionLabel || conditionLabels[data.condition] || 'ভালো',
       location: data.location || 'মিরপুর ১০, ঢাকা',
@@ -1458,7 +1494,12 @@ class Database {
       bookingAmount: data.bookingAmount !== undefined && data.bookingAmount !== null && !isNaN(Number(data.bookingAmount)) ? Number(data.bookingAmount) : null,
       status: data.status || 'booked',
       featured: Boolean(data.featured),
-      badge: data.badge || (data.featured ? 'হট ডিল' : ''),
+      badges: Array.isArray(data.badges) && data.badges.length > 0
+        ? data.badges
+        : (data.badge ? data.badge.split(',').map(s => s.trim()).filter(Boolean) : []),
+      badge: Array.isArray(data.badges) && data.badges.length > 0
+        ? data.badges.join(', ')
+        : (data.badge || ''),
       specifications: Array.isArray(data.specifications) ? data.specifications : [],
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -1466,6 +1507,22 @@ class Database {
   }
 
   async updateProduct(id, updates) {
+    if (updates.images && Array.isArray(updates.images) && updates.images.length > 0) {
+      updates.thumbnail = updates.images[0];
+    }
+    if (updates.badges && Array.isArray(updates.badges)) {
+      updates.badge = updates.badges.join(', ');
+    } else if (updates.badge && typeof updates.badge === 'string') {
+      updates.badges = updates.badge.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    if (updates.category && !updates.categoryName) {
+      try {
+        const foundCat = await Category.findOne({ id: String(updates.category).toLowerCase() }).lean();
+        if (foundCat && (foundCat.title || foundCat.bangla)) {
+          updates.categoryName = foundCat.title || foundCat.bangla;
+        }
+      } catch (e) {}
+    }
     const updated = await Product.findOneAndUpdate(
       { id },
       { $set: { ...updates, updatedAt: Date.now() } },
@@ -1477,6 +1534,65 @@ class Database {
 
   async deleteProduct(id) {
     const res = await Product.deleteOne({ id });
+    return res.deletedCount > 0;
+  }
+
+  // ============================================================================
+  // 🏷️ DYNAMIC CATEGORIES MANAGEMENT
+  // ============================================================================
+  async getCategories() {
+    return await Category.find({ isActive: true }).sort({ order: 1, createdAt: 1 }).lean();
+  }
+
+  async getAllCategories() {
+    return await Category.find({}).sort({ order: 1, createdAt: 1 }).lean();
+  }
+
+  async getCategoryById(id) {
+    return await Category.findOne({ id }).lean();
+  }
+
+  async createCategory(data) {
+    if (!data.title || !data.title.trim()) throw new Error('Category title is required');
+    let id = data.id
+      ? String(data.id).toLowerCase().trim().replace(/[^a-z0-9_-]/g, '-')
+      : String(data.title).toLowerCase().trim().replace(/[^a-z0-9_-]/g, '-');
+    if (!id) id = `cat-${Date.now().toString(36)}`;
+
+    const existing = await Category.findOne({ id });
+    if (existing) {
+      existing.title = data.title.trim();
+      if (data.bangla) existing.bangla = data.bangla.trim();
+      if (data.icon) existing.icon = data.icon;
+      if (data.order !== undefined) existing.order = Number(data.order) || 0;
+      existing.isActive = true;
+      await existing.save();
+      return existing.toObject();
+    }
+
+    return await Category.create({
+      id,
+      title: data.title.trim(),
+      bangla: data.bangla ? data.bangla.trim() : data.title.trim(),
+      icon: data.icon || 'grid-outline',
+      order: Number(data.order) || 0,
+      isActive: true,
+      createdAt: Date.now(),
+    });
+  }
+
+  async updateCategory(id, updates) {
+    const updated = await Category.findOneAndUpdate(
+      { id },
+      { $set: updates },
+      { new: true }
+    ).lean();
+    if (!updated) throw new Error('Category not found');
+    return updated;
+  }
+
+  async deleteCategory(id) {
+    const res = await Category.deleteOne({ id });
     return res.deletedCount > 0;
   }
 

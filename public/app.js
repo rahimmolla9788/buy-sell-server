@@ -106,6 +106,13 @@ function initSocketIO() {
         if (snapshot && typeof snapshot.onlineCount === 'number') {
           updateOnlineHeaderBadge(snapshot.onlineCount);
         }
+        socket.on('categories-updated', () => {
+          loadCategories();
+        });
+
+        socket.on('products-updated', () => {
+          loadProducts();
+        });
       });
     } catch (e) {
       console.warn('[Socket.IO] Error initializing:', e.message);
@@ -113,6 +120,7 @@ function initSocketIO() {
   }
 }
 initSocketIO();
+loadCategories();
 
 // DOM Elements
 const messagesList = document.getElementById('messagesList');
@@ -874,15 +882,23 @@ const packageModalClose = document.getElementById('packageModalClose');
 
 const pkgTabList = document.getElementById('pkgTabList');
 const pkgTabCreate = document.getElementById('pkgTabCreate');
+const pkgTabCategories = document.getElementById('pkgTabCategories');
 
 const pkgViewList = document.getElementById('pkgViewList');
 const pkgViewCreate = document.getElementById('pkgViewCreate');
+const pkgViewCategories = document.getElementById('pkgViewCategories');
 
 const pkgFilterCat = document.getElementById('pkgFilterCat');
 const pkgFilterStatus = document.getElementById('pkgFilterStatus');
 const pkgSearch = document.getElementById('pkgSearch');
 const pkgTableContainer = document.getElementById('pkgTableContainer');
 const pkgCount = document.getElementById('pkgCount');
+const catCountHeader = document.getElementById('catCountHeader');
+const catListCount = document.getElementById('catListCount');
+const catTableContainer = document.getElementById('catTableContainer');
+const btnCreateCategorySubmit = document.getElementById('btnCreateCategorySubmit');
+
+let allCategoriesData = [];
 
 const btnCreateProductSubmit = document.getElementById('btnCreateProductSubmit');
 const btnCancelProduct = document.getElementById('btnCancelProduct');
@@ -913,18 +929,76 @@ function renderProdImagesPreview() {
     .map((url, idx) => {
       const isCover = idx === 0;
       return `
-        <div style="position: relative; border-radius: 8px; overflow: hidden; border: ${isCover ? '2px solid #38bdf8' : '1px solid rgba(255,255,255,0.15)'}; background: #0f172a; aspect-ratio: 1;">
-          <img src="${escapeHtml(url)}" alt="preview-${idx}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
-          ${isCover ? `<span style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(2, 132, 199, 0.9); color: #fff; font-size: 9px; font-weight: 700; text-align: center; padding: 2px;">⭐ কভার ছবি</span>` : ''}
-          <div style="position: absolute; top: 3px; right: 3px; display: flex; gap: 3px;">
-            ${!isCover ? `<button type="button" onclick="window.setCoverProductImage(${idx})" title="কভার ছবি করুন" style="background: rgba(15,23,42,0.85); color: #fbbf24; border: none; border-radius: 4px; width: 20px; height: 20px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center;">⭐</button>` : ''}
-            <button type="button" onclick="window.removeProductImage(${idx})" title="মুছুন" style="background: rgba(239,68,68,0.9); color: #fff; border: none; border-radius: 4px; width: 20px; height: 20px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
+        <div 
+          id="prod-img-tile-${idx}"
+          class="prod-image-drag-tile"
+          draggable="true" 
+          ondragstart="window.dragImageStart(event, ${idx})" 
+          ondragenter="window.dragImageEnter(event, ${idx})"
+          ondragover="window.dragImageOver(event)" 
+          ondragleave="window.dragImageLeave(event, ${idx})"
+          ondragend="window.dragImageEnd(event)"
+          ondrop="window.dropImage(event, ${idx})"
+          style="position: relative; border-radius: 8px; overflow: hidden; border: ${isCover ? '2px solid #0284c7' : '1px solid rgba(255,255,255,0.15)'}; background: #0f172a; display: flex; flex-direction: column; cursor: grab; user-select: none;"
+          title="মাউস দিয়ে ড্র্যাগ করে বা নিচের তীর চিহ্নে ক্লিক করে ছবির অবস্থান পরিবর্তন করুন"
+        >
+          <!-- Top Row: Rank Tag, Drag Grip & Delete -->
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 6px; background: rgba(15, 23, 42, 0.95); border-bottom: 1px solid rgba(255,255,255,0.08); pointer-events: none;">
+            ${isCover
+              ? `<span style="background: #0284c7; color: #fff; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">⭐ #1 কভার</span>`
+              : `<span style="background: rgba(255,255,255,0.1); color: #cbd5e1; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px;">#${idx + 1}</span>`
+            }
+            <span style="display: inline-flex; align-items: center; gap: 2px; font-size: 10px; color: #94a3b8; font-weight: 700;"><span style="font-size: 12px; letter-spacing: -1px;">⠿</span> ড্র্যাগ করুন</span>
+            <button type="button" onclick="window.removeProductImage(${idx})" title="ছবিটি মুছুন" style="pointer-events: auto; background: rgba(239,68,68,0.85); color: #fff; border: none; border-radius: 4px; width: 18px; height: 18px; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
+          </div>
+
+          <!-- Image Container (Tall / Portrait Preview) -->
+          <div style="width: 100%; height: 115px; background: #020617; position: relative; pointer-events: none;">
+            <img src="${escapeHtml(url)}" alt="preview-${idx}" draggable="false" style="width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none;" onerror="this.src='https://placehold.co/150x200?text=Image+Error'">
+            ${isCover ? `<span style="position: absolute; bottom: 2px; right: 2px; background: rgba(2, 132, 199, 0.9); color: #fff; font-size: 9px; font-weight: 700; padding: 1px 4px; border-radius: 3px;">কার্ডের কভার</span>` : ''}
+          </div>
+
+          <!-- Bottom Row: Order Actions (◀ আগে, ▶ পরে, ⭐ কভার) -->
+          <div style="display: flex; gap: 4px; padding: 4px; background: rgba(15, 23, 42, 0.95); border-top: 1px solid rgba(255,255,255,0.08); align-items: center; pointer-events: auto;">
+            <button 
+              type="button" 
+              onclick="window.moveProductImage(${idx}, -1)" 
+              ${idx === 0 ? 'disabled style="opacity: 0.25; cursor: not-allowed;' : 'style="cursor: pointer;'} flex: 1; background: rgba(255,255,255,0.08); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); border-radius: 4px; padding: 4px 0; font-size: 11px; font-weight: 700;" 
+              title="এক ধাপ বামে/আগে নিন"
+            >◀</button>
+
+            ${!isCover ? `
+              <button 
+                type="button" 
+                onclick="window.setCoverProductImage(${idx})" 
+                title="১ম ছবি (কভার) করুন" 
+                style="flex: 2; background: rgba(245,158,11,0.2); color: #fbbf24; border: 1px solid rgba(245,158,11,0.4); border-radius: 4px; padding: 4px 2px; font-size: 10px; font-weight: 700; cursor: pointer; white-space: nowrap;"
+              >⭐ কভার</button>
+            ` : `
+              <span style="flex: 2; text-align: center; color: #38bdf8; font-size: 10px; font-weight: 700; white-space: nowrap;">#১ কভার ছবি</span>
+            `}
+
+            <button 
+              type="button" 
+              onclick="window.moveProductImage(${idx}, 1)" 
+              ${idx === uploadedProductImages.length - 1 ? 'disabled style="opacity: 0.25; cursor: not-allowed;' : 'style="cursor: pointer;'} flex: 1; background: rgba(255,255,255,0.08); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); border-radius: 4px; padding: 4px 0; font-size: 11px; font-weight: 700;" 
+              title="এক ধাপ ডানে/পরে নিন"
+            >▶</button>
           </div>
         </div>
       `;
     })
     .join('');
 }
+
+window.moveProductImage = function (idx, direction) {
+  const targetIdx = idx + direction;
+  if (targetIdx < 0 || targetIdx >= uploadedProductImages.length) return;
+  const temp = uploadedProductImages[idx];
+  uploadedProductImages[idx] = uploadedProductImages[targetIdx];
+  uploadedProductImages[targetIdx] = temp;
+  renderProdImagesPreview();
+};
 
 window.setCoverProductImage = function (idx) {
   if (idx <= 0 || idx >= uploadedProductImages.length) return;
@@ -938,14 +1012,145 @@ window.removeProductImage = function (idx) {
   renderProdImagesPreview();
 };
 
+let draggedImageIdx = null;
+
+window.dragImageStart = function (e, idx) {
+  draggedImageIdx = idx;
+  if (e.dataTransfer) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', String(idx));
+  }
+  const tile = document.getElementById(`prod-img-tile-${idx}`);
+  if (tile) tile.classList.add('is-dragging');
+};
+
+window.dragImageEnter = function (e, idx) {
+  e.preventDefault();
+  if (draggedImageIdx !== null && draggedImageIdx !== idx) {
+    const tile = document.getElementById(`prod-img-tile-${idx}`);
+    if (tile) tile.classList.add('drag-hover-target');
+  }
+};
+
+window.dragImageOver = function (e) {
+  e.preventDefault();
+  if (e.dataTransfer) {
+    e.dataTransfer.dropEffect = 'move';
+  }
+};
+
+window.dragImageLeave = function (e, idx) {
+  const tile = document.getElementById(`prod-img-tile-${idx}`);
+  if (tile) tile.classList.remove('drag-hover-target');
+};
+
+window.dragImageEnd = function (e) {
+  draggedImageIdx = null;
+  document.querySelectorAll('.drag-hover-target').forEach((el) => el.classList.remove('drag-hover-target'));
+  document.querySelectorAll('.is-dragging').forEach((el) => el.classList.remove('is-dragging'));
+};
+
+window.dropImage = function (e, dropIdx) {
+  e.preventDefault();
+  let fromIdx = draggedImageIdx;
+  if (fromIdx === null && e.dataTransfer) {
+    const data = e.dataTransfer.getData('text/plain');
+    if (data !== '') fromIdx = parseInt(data, 10);
+  }
+  if (fromIdx === null || isNaN(fromIdx) || fromIdx === dropIdx) {
+    window.dragImageEnd(e);
+    renderProdImagesPreview();
+    return;
+  }
+  const [moved] = uploadedProductImages.splice(fromIdx, 1);
+  uploadedProductImages.splice(dropIdx, 0, moved);
+  draggedImageIdx = null;
+  window.dragImageEnd(e);
+  renderProdImagesPreview();
+};
+
+let selectedProductBadges = [];
+
+function renderSelectedBadges() {
+  const container = document.getElementById('selectedBadgesContainer');
+  const countLabel = document.getElementById('prodBadgesCountLabel');
+  if (countLabel) countLabel.textContent = `${selectedProductBadges.length} টি ব্যাজ নির্বাচিত`;
+
+  document.querySelectorAll('.preset-badge-btn').forEach((btn) => {
+    const bText = btn.getAttribute('data-badge');
+    if (selectedProductBadges.includes(bText)) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+
+  if (!container) return;
+
+  if (selectedProductBadges.length === 0) {
+    container.innerHTML = `<span style="font-size: 11px; color: #64748b; font-style: italic; padding: 2px 6px;">এখনো কোনো ব্যাজ যোগ করা হয়নি</span>`;
+    return;
+  }
+
+  container.innerHTML = selectedProductBadges
+    .map(
+      (badge, idx) => `
+      <span class="badge-chip-selected">
+        <span>${escapeHtml(badge)}</span>
+        <button type="button" class="badge-chip-remove" onclick="window.removeSelectedBadge(${idx})" title="মুছুন">✕</button>
+      </span>
+    `
+    )
+    .join('');
+}
+
+window.removeSelectedBadge = function (idx) {
+  if (idx >= 0 && idx < selectedProductBadges.length) {
+    selectedProductBadges.splice(idx, 1);
+    renderSelectedBadges();
+  }
+};
+
+window.toggleBadgeFromPreset = function (badgeText) {
+  if (!badgeText) return;
+  const idx = selectedProductBadges.indexOf(badgeText);
+  if (idx >= 0) {
+    selectedProductBadges.splice(idx, 1);
+  } else {
+    selectedProductBadges.push(badgeText);
+  }
+  renderSelectedBadges();
+};
+
+window.addCustomBadge = function () {
+  const input = document.getElementById('customBadgeInput');
+  if (!input) return;
+  const val = input.value.trim();
+  if (val && !selectedProductBadges.includes(val)) {
+    selectedProductBadges.push(val);
+    input.value = '';
+    renderSelectedBadges();
+  }
+};
+
+const customBadgeInputEl = document.getElementById('customBadgeInput');
+if (customBadgeInputEl) {
+  customBadgeInputEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      window.addCustomBadge();
+    }
+  });
+}
+
 function resetProductForm() {
   const form = document.getElementById('createPackageForm');
   if (form) form.reset();
   const editIdEl = document.getElementById('editProdId');
   if (editIdEl) editIdEl.value = '';
-  const locEl = document.getElementById('newProdLocation');
-  if (locEl) locEl.value = 'মিরপুর ১০, ঢাকা';
   uploadedProductImages = [];
+  selectedProductBadges = [];
+  renderSelectedBadges();
   if (imgbbUploadStatus) imgbbUploadStatus.textContent = '';
   if (btnCreateProductSubmit) btnCreateProductSubmit.textContent = '➕ পণ্য যুক্ত করুন (Add Product)';
   renderProdImagesPreview();
@@ -1037,6 +1242,15 @@ if (btnAddImageUrl && newProdImageUrlInput) {
 
 renderProdImagesPreview();
 
+const btnManageCategories = document.getElementById('btnManageCategories');
+if (btnManageCategories && packageModal) {
+  btnManageCategories.addEventListener('click', () => {
+    packageModal.style.display = 'flex';
+    switchPkgTab('categories');
+    loadCategories();
+  });
+}
+
 if (btnManagePackages && packageModal) {
   btnManagePackages.addEventListener('click', () => {
     packageModal.style.display = 'flex';
@@ -1064,8 +1278,8 @@ if (btnCancelProduct) {
 }
 
 function switchPkgTab(tab) {
-  const tabs = [pkgTabList, pkgTabCreate];
-  const views = [pkgViewList, pkgViewCreate];
+  const tabs = [pkgTabList, pkgTabCreate, pkgTabCategories];
+  const views = [pkgViewList, pkgViewCreate, pkgViewCategories];
 
   tabs.forEach((t) => {
     if (t) {
@@ -1089,6 +1303,13 @@ function switchPkgTab(tab) {
       pkgTabCreate.style.borderBottom = '2px solid #0284c7';
     }
     if (pkgViewCreate) pkgViewCreate.style.display = 'block';
+  } else if (tab === 'categories') {
+    if (pkgTabCategories) {
+      pkgTabCategories.classList.add('active');
+      pkgTabCategories.style.borderBottom = '2px solid #0284c7';
+    }
+    if (pkgViewCategories) pkgViewCategories.style.display = 'block';
+    loadCategories();
   }
 }
 
@@ -1097,6 +1318,162 @@ if (pkgTabCreate) pkgTabCreate.addEventListener('click', () => {
   resetProductForm();
   switchPkgTab('create');
 });
+if (pkgTabCategories) pkgTabCategories.addEventListener('click', () => switchPkgTab('categories'));
+
+function getCategoryEmoji(icon) {
+  const map = {
+    'phone-portrait-outline': '📱',
+    'laptop-outline': '💻',
+    'bicycle-outline': '🏍️',
+    'tv-outline': '📺',
+    'snow-outline': '❄️',
+    'camera-outline': '📷',
+    'bed-outline': '🛋️',
+    'watch-outline': '⌚',
+    'shirt-outline': '👕',
+    'book-outline': '📚',
+    'football-outline': '⚽',
+    'cart-outline': '🛒',
+    'grid-outline': '🏷️',
+  };
+  return map[icon] || '🏷️';
+}
+
+async function loadCategories() {
+  try {
+    const res = await fetch('/api/categories');
+    const json = await res.json();
+    if (json && Array.isArray(json.data)) {
+      allCategoriesData = json.data;
+      if (catCountHeader) catCountHeader.textContent = allCategoriesData.length;
+      if (catListCount) catListCount.textContent = allCategoriesData.length;
+      const navCatCountBadge = document.getElementById('navCatCountBadge');
+      if (navCatCountBadge) navCatCountBadge.textContent = allCategoriesData.length;
+      renderCategoriesList();
+      populateCategoryDropdowns();
+    }
+  } catch (err) {
+    console.error('Error loading categories:', err);
+  }
+}
+
+function populateCategoryDropdowns() {
+  const newProdCat = document.getElementById('newProdCat');
+  const pkgFilterCat = document.getElementById('pkgFilterCat');
+
+  if (newProdCat && allCategoriesData.length > 0) {
+    const currentVal = newProdCat.value;
+    newProdCat.innerHTML = allCategoriesData.map(c => 
+      `<option value="${escapeHtml(c.id)}">${escapeHtml(c.title || c.bangla)}</option>`
+    ).join('') + `<option value="others">Others (অন্যান্য)</option>`;
+    if (currentVal) newProdCat.value = currentVal;
+  }
+
+  if (pkgFilterCat && allCategoriesData.length > 0) {
+    const currentVal = pkgFilterCat.value;
+    pkgFilterCat.innerHTML = `<option value="all">All Categories</option>` + 
+      allCategoriesData.map(c => 
+        `<option value="${escapeHtml(c.id)}">${escapeHtml(c.title || c.bangla)}</option>`
+      ).join('') + `<option value="others">Others</option>`;
+    if (currentVal) pkgFilterCat.value = currentVal;
+  }
+}
+
+function renderCategoriesList() {
+  if (!catTableContainer) return;
+  if (!allCategoriesData.length) {
+    catTableContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-muted, #94a3b8);">কোনো ক্যাটাগরি নেই। উপরে নতুন ক্যাটাগরি যুক্ত করুন।</div>';
+    return;
+  }
+
+  catTableContainer.innerHTML = allCategoriesData.map(cat => `
+    <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(30, 41, 59, 0.6); border: 1px solid var(--border-color, #334155); border-radius: 8px; padding: 10px 14px;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div>
+          <div style="font-weight: 700; color: #f8fafc; font-size: 14px;">
+            ${escapeHtml(cat.title || cat.bangla)}
+          </div>
+          <div style="font-size: 11px; color: #64748b; font-family: monospace;">
+            ID: ${escapeHtml(cat.id)}
+          </div>
+        </div>
+      </div>
+      <div>
+        <button onclick="handleDeleteCategory('${escapeHtml(cat.id)}')" class="secondary-btn" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3); padding: 4px 10px; font-size: 12px; cursor: pointer;">
+          🗑️ Delete
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.handleDeleteCategory = async function(id) {
+  if (!confirm(`Are you sure you want to delete category "${id}"?`)) return;
+  try {
+    const res = await fetch(`/api/categories/${id}`, { method: 'DELETE' });
+    const json = await res.json();
+    if (json.success) {
+      showToast('Category deleted successfully');
+      loadCategories();
+    } else {
+      showToast(json.error || 'Failed to delete category');
+    }
+  } catch (err) {
+    showToast('Failed to delete category');
+  }
+};
+
+if (btnCreateCategorySubmit) {
+  btnCreateCategorySubmit.addEventListener('click', async (e) => {
+    e.preventDefault();
+    const title = document.getElementById('newCatTitle')?.value.trim();
+    const slug = document.getElementById('newCatSlug')?.value.trim();
+
+    if (!title) {
+      showToast('Please enter category name');
+      return;
+    }
+
+    try {
+      btnCreateCategorySubmit.disabled = true;
+      btnCreateCategorySubmit.textContent = 'Saving...';
+      const res = await fetch('/api/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          bangla: title,
+          icon: '',
+          id: slug || undefined,
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        showToast('Category created successfully!');
+        if (document.getElementById('newCatTitle')) document.getElementById('newCatTitle').value = '';
+        if (document.getElementById('newCatSlug')) document.getElementById('newCatSlug').value = '';
+        loadCategories();
+      } else {
+        showToast(json.error || 'Failed to create category');
+      }
+    } catch (err) {
+      showToast('Failed to create category');
+    } finally {
+      btnCreateCategorySubmit.disabled = false;
+      btnCreateCategorySubmit.textContent = '➕ Save Category (ক্যাটাগরি যুক্ত করুন)';
+    }
+  });
+
+  const newCatTitleInput = document.getElementById('newCatTitle');
+  if (newCatTitleInput) {
+    newCatTitleInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        btnCreateCategorySubmit.click();
+      }
+    });
+  }
+}
 
 async function loadProducts() {
   try {
@@ -1182,32 +1559,37 @@ function renderProductsList() {
           ` : ''}
 
           <div style="flex: 1; min-width: 0;">
-            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px; flex-wrap: wrap;">
               <span style="font-size: 11px; font-weight: 700; color: #38bdf8; background: rgba(56, 189, 248, 0.12); padding: 2px 6px; border-radius: 4px;">
-                ${icon} ${escapeHtml(prod.categoryName || prod.category)}
-              </span>
-              <span style="font-size: 11px; color: #a855f7; background: rgba(168, 85, 247, 0.12); padding: 2px 6px; border-radius: 4px;">
-                ${escapeHtml(prod.conditionLabel || prod.condition)}
+                ${escapeHtml(prod.categoryName || prod.category)}
               </span>
               ${statusBadge}
-              ${prod.badge ? `<span style="font-size: 10px; background: #eab308; color: #000; font-weight: 800; padding: 1px 6px; border-radius: 4px;">${escapeHtml(prod.badge)}</span>` : ''}
             </div>
 
             <div style="font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #f1f5f9;">
               ${escapeHtml(prod.title)}
             </div>
 
-            <div style="font-size: 12px; color: var(--text-muted, #94a3b8); margin-top: 2px; display: flex; gap: 10px; flex-wrap: wrap;">
-              <span>📍 ${escapeHtml(prod.location || 'মিরপুর ১০, ঢাকা')}</span>
+            ${(() => {
+              const bList = Array.isArray(prod.badges) && prod.badges.length > 0
+                ? prod.badges
+                : (prod.badge ? prod.badge.split(',').map(s => s.trim()).filter(Boolean) : []);
+              if (bList.length === 0) return '';
+              return `
+                <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px;">
+                  ${bList.map(bg => `<span style="font-size: 10px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 4px; padding: 1px 5px; font-weight: 600;">${escapeHtml(bg)}</span>`).join('')}
+                </div>
+              `;
+            })()}
+
+            <div style="font-size: 12px; color: var(--text-muted, #94a3b8); margin-top: 2px;">
               <span>📷 ${imgCount} টি ছবি</span>
-              ${prod.bookingAmount ? `<span>🔖 কাস্টম বুকিং: ৳${prod.bookingAmount}</span>` : ''}
             </div>
           </div>
 
           <div style="display: flex; align-items: center; gap: 10px;">
             <div style="text-align: right;">
               <div style="font-size: 16px; font-weight: 800; color: #22c55e;">৳ ${prod.price ? Number(prod.price).toLocaleString() : 0}</div>
-              ${prod.originalPrice ? `<div style="font-size: 11px; color: #94a3b8; text-decoration: line-through;">৳${Number(prod.originalPrice).toLocaleString()}</div>` : ''}
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 4px;">
@@ -1248,12 +1630,7 @@ window.handleEditProduct = function (id) {
 
   setVal('newProdTitle', prod.title);
   setVal('newProdCat', prod.category || 'mobiles');
-  setVal('newProdCondition', prod.condition || 'used-good');
   setVal('newProdPrice', prod.price || '');
-  setVal('newProdOriginalPrice', prod.originalPrice || '');
-  setVal('newProdBookingAmount', prod.bookingAmount || '');
-  setVal('newProdLocation', prod.location || 'মিরপুর ১০, ঢাকা');
-  setVal('newProdBadge', prod.badge || '');
   setVal('newProdDesc', prod.description || '');
 
   const imgs = [];
@@ -1262,11 +1639,26 @@ window.handleEditProduct = function (id) {
       if (u && !imgs.includes(u)) imgs.push(u);
     });
   }
-  if (prod.thumbnail && !imgs.includes(prod.thumbnail)) {
-    imgs.unshift(prod.thumbnail);
+  if (prod.thumbnail && prod.thumbnail.trim()) {
+    const thumb = prod.thumbnail.trim();
+    const idx = imgs.indexOf(thumb);
+    if (idx > 0) {
+      imgs.splice(idx, 1);
+      imgs.unshift(thumb);
+    } else if (idx === -1) {
+      imgs.unshift(thumb);
+    }
   }
   uploadedProductImages = imgs;
   renderProdImagesPreview();
+
+  selectedProductBadges = [];
+  if (Array.isArray(prod.badges) && prod.badges.length > 0) {
+    selectedProductBadges = [...prod.badges];
+  } else if (prod.badge) {
+    selectedProductBadges = prod.badge.split(',').map((s) => s.trim()).filter(Boolean);
+  }
+  renderSelectedBadges();
 
   if (btnCreateProductSubmit) {
     btnCreateProductSubmit.textContent = '💾 পরিবর্তন সেভ করুন (Update Product)';
@@ -1318,14 +1710,7 @@ if (btnCreateProductSubmit) {
     const editId = document.getElementById('editProdId')?.value.trim();
     const title = document.getElementById('newProdTitle')?.value.trim();
     const category = document.getElementById('newProdCat')?.value;
-    const condition = document.getElementById('newProdCondition')?.value;
     const price = document.getElementById('newProdPrice')?.value;
-    const originalPrice = document.getElementById('newProdOriginalPrice')?.value;
-    const bookingAmount = document.getElementById('newProdBookingAmount')?.value;
-    const location = document.getElementById('newProdLocation')?.value.trim() || 'মিরপুর ১০, ঢাকা';
-    const badge = document.getElementById('newProdBadge')?.value.trim();
-    const sellerName = document.getElementById('newProdSellerName')?.value.trim() || 'Buy & Sell BD';
-    const sellerPhone = document.getElementById('newProdSellerPhone')?.value.trim() || '01900000000';
     const description = document.getElementById('newProdDesc')?.value.trim();
 
     if (!title || !price) {
@@ -1351,29 +1736,28 @@ if (btnCreateProductSubmit) {
       const endpoint = editId ? `/api/products/${encodeURIComponent(editId)}` : '/api/products';
       const method = editId ? 'PUT' : 'POST';
 
+      const selectedCatObj = allCategoriesData.find((c) => c.id === category);
+      const categoryName = selectedCatObj ? (selectedCatObj.title || selectedCatObj.bangla) : (category || 'Others');
+
       const res = await fetch(endpoint, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title,
           category,
-          condition,
+          categoryName,
           price: Number(price),
-          originalPrice: originalPrice ? Number(originalPrice) : null,
-          bookingAmount: bookingAmount ? Number(bookingAmount) : null,
-          location,
-          badge,
           thumbnail: finalImages[0],
           images: finalImages,
-          sellerName,
-          sellerPhone,
+          badges: selectedProductBadges,
+          badge: selectedProductBadges.join(', '),
           description,
         }),
       });
 
       const json = await res.json();
       if (json.success) {
-        showToast(editId ? '✅ পণ্য ও ছবিসমূহ আপডেট হয়েছে!' : '🎉 নতুন পণ্য একাধিক ছবিসহ যুক্ত হয়েছে!');
+        showToast(editId ? '✅ পণ্য, ছবি ও ব্যাজসমূহ আপডেট হয়েছে!' : '🎉 নতুন পণ্য ব্যাজসহ যুক্ত হয়েছে!');
         resetProductForm();
         await loadProducts();
         switchPkgTab('list');
@@ -1385,6 +1769,29 @@ if (btnCreateProductSubmit) {
     } finally {
       btnCreateProductSubmit.disabled = false;
       btnCreateProductSubmit.textContent = editId ? '💾 পরিবর্তন সেভ করুন (Update Product)' : '➕ পণ্য যুক্ত করুন (Add Product)';
+    }
+  });
+}
+
+// Preset Badges Click Handler
+document.querySelectorAll('.preset-badge-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const b = btn.getAttribute('data-badge');
+    window.toggleBadgeFromPreset(b);
+  });
+});
+
+// Custom Badge Add Handlers
+const btnAddCustomBadge = document.getElementById('btnAddCustomBadge');
+if (btnAddCustomBadge) {
+  btnAddCustomBadge.addEventListener('click', window.addCustomBadge);
+}
+const customBadgeInput = document.getElementById('customBadgeInput');
+if (customBadgeInput) {
+  customBadgeInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      window.addCustomBadge();
     }
   });
 }
