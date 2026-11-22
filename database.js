@@ -280,6 +280,12 @@ class Database {
           appName: 'BuySell - সেকেন্ড হ্যান্ড বাজার',
           supportPhone: '0197272313',
           noticeBanner: 'নিরাপদে সেকেন্ড হ্যান্ড পণ্য কিনুন বা টোকেন বুকিং মানি দিয়ে বুক করে রাখুন!',
+          latestVersion: '1.0.0',
+          versionCode: 1,
+          minVersionCode: 1,
+          downloadUrl: '',
+          forceUpdate: true,
+          releaseNotes: 'নতুন আপডেট ও পারফরম্যান্স উন্নতি',
           updatedAt: Date.now(),
         });
         console.log('[MongoDB] Created default AppSettings with bookingPaymentAmount = 50 BDT');
@@ -1358,6 +1364,12 @@ class Database {
           appName: 'BuySell - সেকেন্ড হ্যান্ড বাজার',
           supportPhone: '0197272313',
           noticeBanner: 'নিরাপদে সেকেন্ড হ্যান্ড পণ্য কিনুন বা টোকেন বুকিং মানি দিয়ে বুক করে রাখুন!',
+          latestVersion: '1.0.0',
+          versionCode: 1,
+          minVersionCode: 1,
+          downloadUrl: '',
+          forceUpdate: true,
+          releaseNotes: 'নতুন আপডেট ও পারফরম্যান্স উন্নতি',
           updatedAt: Date.now(),
         });
         if (settings.toObject) settings = settings.toObject();
@@ -1391,6 +1403,17 @@ class Database {
     if (data.deliveryFeeOutsideDhaka !== undefined) {
       const val = Number(data.deliveryFeeOutsideDhaka);
       data.deliveryFeeOutsideDhaka = isNaN(val) || val <= 0 ? 120 : val;
+    }
+    if (data.versionCode !== undefined) {
+      const val = Number(data.versionCode);
+      data.versionCode = isNaN(val) || val <= 0 ? 1 : val;
+    }
+    if (data.minVersionCode !== undefined) {
+      const val = Number(data.minVersionCode);
+      data.minVersionCode = isNaN(val) || val <= 0 ? 1 : val;
+    }
+    if (data.forceUpdate !== undefined) {
+      data.forceUpdate = Boolean(data.forceUpdate);
     }
     const updated = await AppSettings.findOneAndUpdate(
       { key: 'global_settings' },

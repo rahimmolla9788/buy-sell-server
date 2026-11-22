@@ -49,7 +49,7 @@ app.use((req, res, next) => {
   if (req.url.startsWith('/server.js')) {
     req.url = req.url.replace(/^\/server\.js/, '') || '/';
   }
-  const knownPrefixes = ['/admin', '/auth', '/health', '/stats', '/devices', '/sms', '/sims', '/packages', '/users', '/payment', '/products', '/settings', '/upload-image', '/orders'];
+  const knownPrefixes = ['/admin', '/auth', '/health', '/stats', '/devices', '/sms', '/sims', '/packages', '/users', '/payment', '/products', '/settings', '/upload-image', '/orders', '/app'];
   if (!req.url.startsWith('/api') && knownPrefixes.some((p) => req.url.startsWith(p))) {
     req.url = '/api' + (req.url.startsWith('/') ? req.url : '/' + req.url);
   }
@@ -1068,6 +1068,86 @@ app.all(['/settings', '/api/settings', '/admin/settings', '/api/admin/settings']
       socketService.getIO()?.emit('products-updated');
     }
     res.json({ success: true, message: 'Settings updated successfully', data: updated });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+// ============================================================================
+// 🚀 APP VERSION & OTA UPDATE SYSTEM
+// ============================================================================
+
+/**
+ * GET APP VERSION
+ * GET /api/app/version or GET /app/version
+ */
+app.get(['/app/version', '/api/app/version'], async (req, res) => {
+  try {
+    const settings = await db.getAppSettings();
+    res.json({
+      success: true,
+      latest_version: settings.latestVersion || '1.0.0',
+      version_code: settings.versionCode || 1,
+      min_version_code: settings.minVersionCode || 1,
+      download_url: settings.downloadUrl || '',
+      force_update: settings.forceUpdate !== false,
+      release_notes: settings.releaseNotes || 'নতুন আপডেট ও পারফরম্যান্স উন্নতি',
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * UPDATE APP VERSION (Admin)
+ * POST /api/app/version or POST /admin/app/version
+ */
+app.post(['/app/version', '/api/app/version', '/admin/app/version', '/api/admin/app/version'], async (req, res) => {
+  try {
+    const {
+      latest_version,
+      latestVersion,
+      version_code,
+      versionCode,
+      min_version_code,
+      minVersionCode,
+      download_url,
+      downloadUrl,
+      force_update,
+      forceUpdate,
+      release_notes,
+      releaseNotes,
+    } = req.body || {};
+
+    const updates = {};
+    if (latest_version !== undefined || latestVersion !== undefined) updates.latestVersion = String(latest_version ?? latestVersion).trim();
+    if (version_code !== undefined || versionCode !== undefined) updates.versionCode = Number(version_code ?? versionCode);
+    if (min_version_code !== undefined || minVersionCode !== undefined) updates.minVersionCode = Number(min_version_code ?? minVersionCode);
+    if (download_url !== undefined || downloadUrl !== undefined) updates.downloadUrl = String(download_url ?? downloadUrl).trim();
+    if (force_update !== undefined || forceUpdate !== undefined) updates.forceUpdate = Boolean(force_update ?? forceUpdate);
+    if (release_notes !== undefined || releaseNotes !== undefined) updates.releaseNotes = String(release_notes ?? releaseNotes).trim();
+
+    const updated = await db.updateAppSettings(updates);
+    socketService.getIO()?.emit('app-version-updated', {
+      latest_version: updated.latestVersion,
+      version_code: updated.versionCode,
+      min_version_code: updated.minVersionCode,
+      download_url: updated.downloadUrl,
+      force_update: updated.forceUpdate,
+      release_notes: updated.releaseNotes,
+    });
+    res.json({
+      success: true,
+      message: 'App version updated successfully',
+      data: {
+        latest_version: updated.latestVersion,
+        version_code: updated.versionCode,
+        min_version_code: updated.minVersionCode,
+        download_url: updated.downloadUrl,
+        force_update: updated.forceUpdate,
+        release_notes: updated.releaseNotes,
+      },
+    });
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
   }

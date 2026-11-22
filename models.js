@@ -282,6 +282,12 @@ const appSettingsSchema = new mongoose.Schema(
       type: String,
       default: 'নিরাপদে সেকেন্ড হ্যান্ড পণ্য কিনুন বা টোকেন বুকিং মানি দিয়ে বুক করে রাখুন!',
     },
+    latestVersion: { type: String, default: '1.0.0' },
+    versionCode: { type: Number, default: 1 },
+    minVersionCode: { type: Number, default: 1 },
+    downloadUrl: { type: String, default: '' },
+    forceUpdate: { type: Boolean, default: true },
+    releaseNotes: { type: String, default: 'নতুন আপডেট ও পারফরম্যান্স উন্নতি' },
     updatedAt: { type: Number, default: () => Date.now() },
   },
   {

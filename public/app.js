@@ -785,6 +785,11 @@ async function loadAppSettings() {
       const nameInput = document.getElementById('settingAppName');
       const phoneInput = document.getElementById('settingSupportPhone');
       const noticeInput = document.getElementById('settingNoticeBanner');
+      const verCodeInput = document.getElementById('settingVersionCode');
+      const verNameInput = document.getElementById('settingLatestVersion');
+      const downUrlInput = document.getElementById('settingDownloadUrl');
+      const relNotesInput = document.getElementById('settingReleaseNotes');
+      const forceUpCheck = document.getElementById('settingForceUpdate');
 
       if (bInput) bInput.value = s.bookingPaymentAmount || 50;
       if (insideInput) insideInput.value = s.deliveryFeeInsideDhaka ?? 70;
@@ -794,6 +799,11 @@ async function loadAppSettings() {
       if (nameInput) nameInput.value = s.appName || 'BuySell - সেকেন্ড হ্যান্ড বাজার';
       if (phoneInput) phoneInput.value = s.supportPhone || '0197272313';
       if (noticeInput) noticeInput.value = s.noticeBanner || '';
+      if (verCodeInput) verCodeInput.value = s.versionCode || 1;
+      if (verNameInput) verNameInput.value = s.latestVersion || '1.0.0';
+      if (downUrlInput) downUrlInput.value = s.downloadUrl || '';
+      if (relNotesInput) relNotesInput.value = s.releaseNotes || 'নতুন আপডেট ও পারফরম্যান্স উন্নতি';
+      if (forceUpCheck) forceUpCheck.checked = s.forceUpdate !== false;
     }
   } catch (err) {
     console.warn('[Settings] Failed to fetch settings:', err.message);
@@ -828,6 +838,11 @@ if (btnSaveSettings) {
     const appName = document.getElementById('settingAppName')?.value.trim();
     const supportPhone = document.getElementById('settingSupportPhone')?.value.trim();
     const noticeBanner = document.getElementById('settingNoticeBanner')?.value.trim();
+    const versionCode = Number(document.getElementById('settingVersionCode')?.value) || 1;
+    const latestVersion = document.getElementById('settingLatestVersion')?.value.trim() || '1.0.0';
+    const downloadUrl = document.getElementById('settingDownloadUrl')?.value.trim() || '';
+    const releaseNotes = document.getElementById('settingReleaseNotes')?.value.trim() || '';
+    const forceUpdate = document.getElementById('settingForceUpdate')?.checked !== false;
 
     const bookingPaymentAmount = Number(amountVal) || 50;
     const deliveryFeeInsideDhaka = Number(insideVal) || 70;
@@ -849,6 +864,11 @@ if (btnSaveSettings) {
           appName,
           supportPhone,
           noticeBanner,
+          versionCode,
+          latestVersion,
+          downloadUrl,
+          releaseNotes,
+          forceUpdate,
         }),
       });
 
