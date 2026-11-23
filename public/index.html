@@ -729,8 +729,14 @@
               </div>
             </div>
             <div class="form-group" style="margin-bottom: 10px;">
-              <label for="settingDownloadUrl" style="font-size: 12px; color: #94a3b8;">Direct APK Download URL (লিঙ্ক)</label>
-              <input type="text" id="settingDownloadUrl" class="form-input" placeholder="https://example.com/app-latest.apk বা /downloads/app-release.apk" value="">
+              <label for="settingDownloadUrl" style="font-size: 12px; color: #94a3b8; display: flex; justify-content: space-between; align-items: center;">
+                <span>Direct APK Download URL বা Google Drive Share Link</span>
+                <span id="driveLinkConvertedBadge" style="display: none; font-size: 11px; background: #059669; color: #ffffff; padding: 1px 6px; border-radius: 4px; font-weight: 700;">✅ Google Drive Direct Link Converted</span>
+              </label>
+              <input type="text" id="settingDownloadUrl" class="form-input" placeholder="Google Drive শেয়ার লিঙ্ক পেস্ট করুন (অটোমেটিক কনভার্ট হবে)..." value="">
+              <p style="font-size: 11px; color: #94a3b8; margin: 4px 0 0;">
+                💡 Google Drive-এর যেকোনো ফাইল শেয়ার লিঙ্ক পেস্ট করলেই সেটি স্বয়ংক্রিয়ভাবে সরাসরি ডাউনলোড লিঙ্কে কনভার্ট হয়ে যাবে।
+              </p>
             </div>
             <div class="form-group" style="margin-bottom: 10px;">
               <label for="settingReleaseNotes" style="font-size: 12px; color: #94a3b8;">Release Notes (আপডেটের বিবরণ)</label>

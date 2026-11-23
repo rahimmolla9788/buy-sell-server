@@ -14,6 +14,25 @@ function cleanDigits(str) {
   return String(str).replace(/\D/g, '');
 }
 
+function convertGoogleDriveLink(url) {
+  if (!url || typeof url !== 'string') return '';
+  const trimmed = url.trim();
+  let fileId = null;
+  const fileDMatch = trimmed.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (fileDMatch && fileDMatch[1]) {
+    fileId = fileDMatch[1];
+  } else {
+    const idMatch = trimmed.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (idMatch && idMatch[1] && (trimmed.includes('drive.google.com') || trimmed.includes('docs.google.com'))) {
+      fileId = idMatch[1];
+    }
+  }
+  if (fileId) {
+    return `https://drive.google.com/uc?export=download&confirm=t&id=${fileId}`;
+  }
+  return trimmed;
+}
+
 function normalizePhone(str) {
   if (!str) return '';
   const trimmed = String(str).trim();
@@ -1392,6 +1411,9 @@ class Database {
 
   async updateAppSettings(updates = {}) {
     const data = { ...updates, updatedAt: Date.now() };
+    if (data.downloadUrl !== undefined) {
+      data.downloadUrl = convertGoogleDriveLink(data.downloadUrl);
+    }
     if (data.bookingPaymentAmount !== undefined) {
       const val = Number(data.bookingPaymentAmount);
       data.bookingPaymentAmount = isNaN(val) || val <= 0 ? 50 : val;

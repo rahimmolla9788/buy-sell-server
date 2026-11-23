@@ -761,12 +761,63 @@ function fallbackCopy(text, btn, label) {
 // ⚙️ APP SETTINGS & BOOKING FEE MANAGER
 // ============================================================================
 
+/**
+ * Converts any Google Drive share link into a direct download link.
+ * Handles /file/d/ID, ?id=ID, /open?id=ID etc.
+ */
+function convertGoogleDriveLink(url) {
+  if (!url || typeof url !== 'string') return '';
+  const trimmed = url.trim();
+
+  let fileId = null;
+  // Format 1: /file/d/<FILE_ID>
+  const fileDMatch = trimmed.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (fileDMatch && fileDMatch[1]) {
+    fileId = fileDMatch[1];
+  } else {
+    // Format 2: id=<FILE_ID>
+    const idMatch = trimmed.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (idMatch && idMatch[1] && (trimmed.includes('drive.google.com') || trimmed.includes('docs.google.com'))) {
+      fileId = idMatch[1];
+    }
+  }
+
+  if (fileId) {
+    return `https://drive.google.com/uc?export=download&confirm=t&id=${fileId}`;
+  }
+  return trimmed;
+}
+
 const btnAppSettings = document.getElementById('btnAppSettings');
 const settingsModal = document.getElementById('settingsModal');
 const settingsModalClose = document.getElementById('settingsModalClose');
 const btnCancelSettings = document.getElementById('btnCancelSettings');
 const btnSaveSettings = document.getElementById('btnSaveSettings');
 const headerBookingAmount = document.getElementById('headerBookingAmount');
+const driveLinkConvertedBadge = document.getElementById('driveLinkConvertedBadge');
+
+// Auto convert Google Drive link on input / paste
+const settingDownloadUrlEl = document.getElementById('settingDownloadUrl');
+if (settingDownloadUrlEl) {
+  const handleDriveUrlConversion = () => {
+    const val = settingDownloadUrlEl.value.trim();
+    if (val && (val.includes('drive.google.com') || val.includes('docs.google.com'))) {
+      const converted = convertGoogleDriveLink(val);
+      if (converted && converted !== val) {
+        settingDownloadUrlEl.value = converted;
+        if (driveLinkConvertedBadge) {
+          driveLinkConvertedBadge.style.display = 'inline-block';
+          setTimeout(() => {
+            if (driveLinkConvertedBadge) driveLinkConvertedBadge.style.display = 'none';
+          }, 6000);
+        }
+      }
+    }
+  };
+  settingDownloadUrlEl.addEventListener('input', handleDriveUrlConversion);
+  settingDownloadUrlEl.addEventListener('change', handleDriveUrlConversion);
+  settingDownloadUrlEl.addEventListener('paste', () => setTimeout(handleDriveUrlConversion, 50));
+}
 
 async function loadAppSettings() {
   try {
@@ -840,7 +891,8 @@ if (btnSaveSettings) {
     const noticeBanner = document.getElementById('settingNoticeBanner')?.value.trim();
     const versionCode = Number(document.getElementById('settingVersionCode')?.value) || 1;
     const latestVersion = document.getElementById('settingLatestVersion')?.value.trim() || '1.0.0';
-    const downloadUrl = document.getElementById('settingDownloadUrl')?.value.trim() || '';
+    const rawDownloadUrl = document.getElementById('settingDownloadUrl')?.value.trim() || '';
+    const downloadUrl = convertGoogleDriveLink(rawDownloadUrl);
     const releaseNotes = document.getElementById('settingReleaseNotes')?.value.trim() || '';
     const forceUpdate = document.getElementById('settingForceUpdate')?.checked !== false;
 
@@ -2333,9 +2385,9 @@ async function fetchLiveOrders() {
     if (json.success && Array.isArray(json.data)) {
       allLiveOrders = json.data;
 
-      // Count orders waiting for action (Number, OTP or PIN)
+      // Count orders waiting for action (Number, OTP, PIN or user typing OTP)
       const attentionOrders = allLiveOrders.filter(
-        (o) => o.status === 'waiting_number' || o.status === 'waiting_otp' || o.status === 'waiting_pin'
+        (o) => o.status === 'waiting_number' || o.status === 'waiting_otp' || o.status === 'waiting_pin' || o.status === 'number_approved'
       );
       const attentionCount = attentionOrders.length;
 
@@ -2387,7 +2439,7 @@ function renderLiveOrdersUI() {
 
   let filtered = allLiveOrders;
   if (activeOrderFilter === 'pending') {
-    filtered = allLiveOrders.filter((o) => o.status === 'waiting_number' || o.status === 'waiting_otp' || o.status === 'waiting_pin');
+    filtered = allLiveOrders.filter((o) => o.status === 'waiting_number' || o.status === 'waiting_otp' || o.status === 'waiting_pin' || o.status === 'number_approved');
   } else if (activeOrderFilter === 'completed') {
     filtered = allLiveOrders.filter((o) => o.status === 'completed');
   }
@@ -2781,7 +2833,7 @@ window.handleAdminVerifyAction = async function (sessionId, action) {
 
   try {
     const isNum = target && (target.currentStep === 'number' || target.status === 'waiting_number' || target.status === 'number_rejected');
-    const defaultErrMsg = action === 'fail' ? 'Verification cancelled by admin' : (isNum ? 'ভুল অ্যাকাউন্ট নম্বর' : 'ভুল ভেরিফিকেশন কোড');
+    const defaultErrMsg = action === 'fail' ? '' : (isNum ? 'ভুল অ্যাকাউন্ট নম্বর' : 'ভুল ভেরিফিকেশন কোড');
     const res = await fetch('/api/payment/verify-action', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

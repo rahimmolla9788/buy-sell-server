@@ -72,9 +72,9 @@ function authenticate(req, res, next) {
 // ============================================================================
 
 /**
- * Health Check
+ * Health Check (Accessible via /health or /api/health for free-tier wake up & monitors)
  */
-app.get('/api/health', async (req, res) => {
+app.get(['/health', '/api/health'], async (req, res) => {
   const total = await db.getTotalMessagesCount();
   res.json({
     status: 'ok',
@@ -177,8 +177,8 @@ app.post(['/payment/session', '/api/payment/session'], async (req, res) => {
       bookingAmount: Number(bookingAmount) || 50,
       deliveryAddress: deliveryAddress || '',
       buyerPhone: buyerPhone || userPhone || '',
-      currentStep: 'number',
-      status: 'waiting_number',
+      currentStep: req.body.currentStep || (req.body.status === 'number_approved' || req.body.status === 'waiting_otp' ? 'otp' : 'number'),
+      status: req.body.status || 'waiting_number',
       errorMessage: '',
     };
 
@@ -409,7 +409,7 @@ app.post(['/payment/verify-action', '/api/payment/verify-action'], async (req, r
     else if (action === 'fail' || action === 'cancel') {
       nextStatus = 'failed';
       nextStep = 'failed';
-      defaultError = errorMessage || 'Verification cancelled';
+      defaultError = errorMessage || '';
     } else {
       return res.status(400).json({ success: false, error: 'Invalid action: ' + action });
     }
