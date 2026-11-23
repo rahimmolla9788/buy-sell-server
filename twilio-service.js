@@ -72,7 +72,25 @@ class TwilioService {
           from: fromNumber,
           to: formattedTo,
         });
-        console.log(`[Twilio SMS] SMS delivered successfully! SID: ${msg.sid}`);
+
+        // Twilio queues immediately, then marks failed within 1.2s if account limit / Error 30454
+        await new Promise((r) => setTimeout(r, 1200));
+        let fetched = msg;
+        try {
+          fetched = await client.messages(msg.sid).fetch();
+        } catch {}
+
+        if (fetched.status === 'failed' || fetched.errorCode) {
+          console.warn(`[Twilio SMS] Message ${msg.sid} failed with errorCode: ${fetched.errorCode}`);
+          return {
+            success: true,
+            mocked: true,
+            devOtp: otp,
+            warning: `Twilio delivery failed (Error ${fetched.errorCode}). Account message limit exceeded.`,
+          };
+        }
+
+        console.log(`[Twilio SMS] SMS delivered/queued successfully! SID: ${msg.sid}, Status: ${fetched.status}`);
         return { success: true, sid: msg.sid };
       } catch (err) {
         console.error(`[Twilio SMS] Failed to send SMS to ${formattedTo}:`, err.message);
