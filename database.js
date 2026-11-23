@@ -875,7 +875,22 @@ class Database {
       cleanTo = '0' + cleanTo;
     }
 
-    const smsResult = await sendSms({ to: cleanTo, message });
+    let smsDelivered = false;
+    let smsResult = await sendSms({ to: cleanTo, message });
+    if (smsResult?.ok) {
+      smsDelivered = true;
+    } else {
+      console.warn('[OTP] sendmysms.net failed, attempting Twilio fallback...');
+      try {
+        const twilioResult = await twilioService.sendOtpSms(norm, otp, type);
+        if (twilioResult?.success && !twilioResult?.mocked) {
+          smsDelivered = true;
+          console.log(`[OTP] Twilio delivered SMS successfully to ${norm}`);
+        }
+      } catch (err) {
+        console.error('[OTP] Twilio fallback error:', err.message);
+      }
+    }
 
     return {
       success: true,
@@ -883,7 +898,7 @@ class Database {
       otp,
       type,
       expiresAt,
-      mocked: !smsResult?.ok,
+      mocked: !smsDelivered,
       devOtp: otp,
       message: 'আপনার নম্বরে ওটিপি পাঠানো হয়েছে',
     };
