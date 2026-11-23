@@ -19,8 +19,12 @@ const sendSms = async ({ to, message }) => {
       return { ok: false, error: "'to' and 'message' are required" };
     }
 
-    const user = config?.smsUser || process.env.SMS_USER || "rahimmolla";
-    const key = config?.smsKey || process.env.SMS_KEY || "998b3558c215a19f5a5fd15a5c9f55b2";
+    const rawUser = config?.smsUser || process.env.SMS_USER || "rahimmolla";
+    const rawKey = config?.smsKey || process.env.SMS_KEY || process.env.SMS_API_KEY || "998b3558c215a19f5a5fd15a5c9f55b2";
+    const user = String(rawUser).trim().replace(/^["']|["']$/g, '');
+    const key = String(rawKey).trim().replace(/^["']|["']$/g, '');
+
+    console.log(`[SendMySMS] Auth: user='${user}', keyLength=${key.length}`);
 
     if (!user || !key) {
       console.warn("[SendMySMS] Missing user or key in configuration");
