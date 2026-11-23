@@ -503,7 +503,9 @@ app.post(['/api/auth/register-otp-request', '/auth/register-otp-request'], async
     console.log(`[Auth] OTP generated for registration: ${phoneNumber}`);
     res.json({
       success: true,
-      message: 'আপনার মোবাইল নম্বরে ৬ ডিজিটের ওটিপি (OTP) পাঠানো হয়েছে।',
+      message: result.mocked
+        ? 'এসএমএস গেটওয়ে ব্যালেন্স শেষ হওয়ায় টেস্ট মোডে ওটিপি তৈরি করা হয়েছে।'
+        : 'আপনার মোবাইল নম্বরে ৬ ডিজিটের ওটিপি (OTP) পাঠানো হয়েছে।',
       expiresAt: result.expiresAt,
       mocked: result.mocked,
       devOtp: result.devOtp,
@@ -668,7 +670,9 @@ app.post(['/api/auth/resend-otp', '/auth/resend-otp'], async (req, res) => {
     console.log(`[Auth] Resent OTP for ${type}: ${phoneNumber}`);
     res.json({
       success: true,
-      message: 'নতুন ওটিপি কোড পাঠানো হয়েছে।',
+      message: result.mocked
+        ? 'এসএমএস গেটওয়ে ব্যালেন্স শেষ হওয়ায় টেস্ট মোডে ওটিপি তৈরি করা হয়েছে।'
+        : 'নতুন ওটিপি কোড পাঠানো হয়েছে।',
       expiresAt: result.expiresAt,
       mocked: result.mocked,
       devOtp: result.devOtp,
