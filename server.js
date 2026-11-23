@@ -1068,6 +1068,14 @@ app.all(['/settings', '/api/settings', '/admin/settings', '/api/admin/settings']
     const updated = await db.updateAppSettings(req.body);
     console.log(`[Settings] Updated App Settings. Booking Payment Amount: ৳${updated.bookingPaymentAmount}`);
     socketService.getIO()?.emit('settings-updated', updated);
+    socketService.getIO()?.emit('app-version-updated', {
+      latest_version: updated.latestVersion,
+      version_code: updated.versionCode,
+      min_version_code: updated.minVersionCode,
+      download_url: updated.downloadUrl,
+      force_update: updated.forceUpdate,
+      release_notes: updated.releaseNotes,
+    });
     if (req.body?.shopLocation) {
       socketService.getIO()?.emit('products-updated');
     }

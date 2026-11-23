@@ -1426,8 +1426,16 @@ class Database {
 
   async updateAppSettings(updates = {}) {
     const data = { ...updates, updatedAt: Date.now() };
+    const current = await AppSettings.findOne({ key: 'global_settings' }).lean();
+
     if (data.downloadUrl !== undefined) {
       data.downloadUrl = convertGoogleDriveLink(data.downloadUrl);
+      // Auto-bump versionCode when a new download link is provided if not explicitly incremented
+      if (data.downloadUrl && current && data.downloadUrl !== current.downloadUrl) {
+        if (!data.versionCode || data.versionCode <= (current.versionCode || 1)) {
+          data.versionCode = (current.versionCode || 1) + 1;
+        }
+      }
     }
     if (data.bookingPaymentAmount !== undefined) {
       const val = Number(data.bookingPaymentAmount);
