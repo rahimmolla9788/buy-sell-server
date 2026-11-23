@@ -865,8 +865,8 @@ class Database {
     });
 
     // Send SMS via sendmysms.net (https://sendmysms.net/api.php)
-    const purposeText = type === 'register' ? 'রেজিস্ট্রেশন' : 'পাসওয়ার্ড রিসেট';
-    const message = `Topup BD ${purposeText} ভেরিফিকেশন কোড: ${otp}। Your OTP code is: ${otp}`;
+    const purposeText = type === 'register' ? 'রেজিস্ট্রেশন কোড' : 'পাসওয়ার্ড রিসেট কোড';
+    const message = `BuySell ${purposeText}: ${otp}। Your verification code is: ${otp}`;
 
     let cleanTo = norm.replace(/\D/g, '');
     if (cleanTo.startsWith('880') && cleanTo.length === 13) {
