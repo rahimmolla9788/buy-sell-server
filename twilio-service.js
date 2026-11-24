@@ -59,7 +59,7 @@ class TwilioService {
   async sendOtpSms(phoneNumber, otp, type = 'register') {
     const formattedTo = formatE164(phoneNumber);
     const purposeText = type === 'register' ? 'অ্যাকাউন্ট রেজিস্ট্রেশন' : 'পাসওয়ার্ড রিসেট';
-    const messageBody = `[Easy Recharge] আপনার ${purposeText} ভেরিফিকেশন কোড (OTP) হলো: ${otp}। এটি ৫ মিনিট কার্যকর থাকবে। গোপন রাখুন।`;
+    const messageBody = `[BuySell] আপনার ${purposeText} ভেরিফিকেশন কোড (OTP) হলো: ${otp}। এটি ৫ মিনিট কার্যকর থাকবে। গোপন রাখুন।`;
 
     const client = this.getClient();
     const fromNumber = (process.env.TWILIO_PHONE_NUMBER || '').trim();

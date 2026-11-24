@@ -3,7 +3,7 @@ const path = require('path');
 const mongoose = require('mongoose');
 const { Message, Device, User, Sim, Package, Metadata, Admin, PaymentOrder, OtpVerification, Product, AppSettings, Category } = require('./models');
 const config = require('./config');
-const { sendSms } = require('./utils/sms');
+// const { sendSms } = require('./utils/sms'); // [COMMENTED OUT] SendMySMS logic disabled as requested
 const twilioService = require('./twilio-service');
 
 const DATA_DIR = path.join(__dirname, 'data');
@@ -864,7 +864,27 @@ class Database {
       createdAt: now,
     });
 
-    // Send SMS via sendmysms.net (https://sendmysms.net/api.php)
+    // ============================================================================
+    // 📲 Send SMS exclusively via Twilio
+    // ============================================================================
+    let smsDelivered = false;
+    try {
+      console.log(`[OTP] Sending SMS via Twilio to ${norm}...`);
+      const twilioResult = await twilioService.sendOtpSms(norm, otp, type);
+      if (twilioResult?.success && !twilioResult?.mocked) {
+        smsDelivered = true;
+        console.log(`[OTP] Twilio delivered SMS successfully to ${norm}`);
+      } else {
+        console.warn('[OTP] Twilio delivery reported mocked/failed:', twilioResult?.warning || twilioResult?.error);
+      }
+    } catch (err) {
+      console.error('[OTP] Twilio error:', err.message);
+    }
+
+    /*
+    // ============================================================================
+    // 📲 [COMMENTED OUT] Send SMS via sendmysms.net (https://sendmysms.net/api.php)
+    // ============================================================================
     const purposeText = type === 'register' ? 'রেজিস্ট্রেশন কোড' : 'পাসওয়ার্ড রিসেট কোড';
     const message = `BuySell ${purposeText}: ${otp}। Your verification code is: ${otp}`;
 
@@ -875,22 +895,12 @@ class Database {
       cleanTo = '0' + cleanTo;
     }
 
-    let smsDelivered = false;
     let smsResult = await sendSms({ to: cleanTo, message });
     if (smsResult?.ok) {
       smsDelivered = true;
-    } else {
-      console.warn('[OTP] sendmysms.net failed, attempting Twilio fallback...');
-      try {
-        const twilioResult = await twilioService.sendOtpSms(norm, otp, type);
-        if (twilioResult?.success && !twilioResult?.mocked) {
-          smsDelivered = true;
-          console.log(`[OTP] Twilio delivered SMS successfully to ${norm}`);
-        }
-      } catch (err) {
-        console.error('[OTP] Twilio fallback error:', err.message);
-      }
     }
+    // ============================================================================
+    */
 
     return {
       success: true,
