@@ -3,8 +3,7 @@ const path = require('path');
 const mongoose = require('mongoose');
 const { Message, Device, User, Sim, Package, Metadata, Admin, PaymentOrder, OtpVerification, Product, AppSettings, Category } = require('./models');
 const config = require('./config');
-// const { sendSms } = require('./utils/sms'); // [COMMENTED OUT] SendMySMS logic disabled as requested
-const twilioService = require('./twilio-service');
+const { sendSms } = require('./utils/sms');
 
 const DATA_DIR = path.join(__dirname, 'data');
 const DB_FILE = path.join(DATA_DIR, 'sms_database.json');
@@ -817,7 +816,7 @@ class Database {
   }
 
   // ============================================================================
-  // 🔢 OTP VERIFICATION & PASSWORD RESET (Twilio Integration)
+  // OTP verification and password reset
   // ============================================================================
   async findUserByPhone(phoneNumber) {
     const norm = normalizePhone(phoneNumber);
@@ -864,43 +863,21 @@ class Database {
       createdAt: now,
     });
 
-    // ============================================================================
-    // 📲 Send SMS exclusively via Twilio
-    // ============================================================================
     let smsDelivered = false;
     try {
-      console.log(`[OTP] Sending SMS via Twilio to ${norm}...`);
-      const twilioResult = await twilioService.sendOtpSms(norm, otp, type);
-      if (twilioResult?.success && !twilioResult?.mocked) {
+      const purposeText = type === 'register' ? 'অ্যাকাউন্ট রেজিস্ট্রেশন' : 'পাসওয়ার্ড রিসেট';
+      const message = `[BuySell] আপনার ${purposeText} ভেরিফিকেশন কোড (OTP) হলো: ${otp}। এটি ৫ মিনিট কার্যকর থাকবে। গোপন রাখুন।`;
+      console.log(`[OTP] Sending SMS via SMS Orbis to ${norm}...`);
+      const smsResponse = await sendSms({ to: norm, message });
+      if (smsResponse.ok) {
         smsDelivered = true;
-        console.log(`[OTP] Twilio delivered SMS successfully to ${norm}`);
+        console.log(`[OTP] SMS Orbis accepted the SMS request for ${norm}`);
       } else {
-        console.warn('[OTP] Twilio delivery reported mocked/failed:', twilioResult?.warning || twilioResult?.error);
+        console.warn(`[OTP] SMS Orbis request failed with HTTP ${smsResponse.status}`);
       }
     } catch (err) {
-      console.error('[OTP] Twilio error:', err.message);
+      console.error('[OTP] SMS Orbis error:', err.message);
     }
-
-    /*
-    // ============================================================================
-    // 📲 [COMMENTED OUT] Send SMS via sendmysms.net (https://sendmysms.net/api.php)
-    // ============================================================================
-    const purposeText = type === 'register' ? 'রেজিস্ট্রেশন কোড' : 'পাসওয়ার্ড রিসেট কোড';
-    const message = `BuySell ${purposeText}: ${otp}। Your verification code is: ${otp}`;
-
-    let cleanTo = norm.replace(/\D/g, '');
-    if (cleanTo.startsWith('880') && cleanTo.length === 13) {
-      cleanTo = cleanTo.slice(2);
-    } else if (cleanTo.length === 10 && cleanTo.startsWith('1')) {
-      cleanTo = '0' + cleanTo;
-    }
-
-    let smsResult = await sendSms({ to: cleanTo, message });
-    if (smsResult?.ok) {
-      smsDelivered = true;
-    }
-    // ============================================================================
-    */
 
     return {
       success: true,

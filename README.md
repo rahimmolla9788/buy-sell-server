@@ -42,6 +42,9 @@ The server will start on port `5000`:
 - **Web Dashboard**: [http://localhost:5000](http://localhost:5000)
 - **REST API Base**: [http://localhost:5000/api](http://localhost:5000/api)
 
+### SMS OTP Configuration
+Set `SMS_ORBIS_API_KEY` and `SMS_SENDER_ID` in the server environment to enable OTP delivery through SMS Orbis. `SMS_API_KEY` is also accepted as a fallback API-key variable.
+
 ---
 
 ## 📡 REST API Reference

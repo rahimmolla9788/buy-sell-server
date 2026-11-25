@@ -455,7 +455,7 @@ app.delete(['/payment/order/:sessionId', '/api/payment/order/:sessionId'], async
 // ============================================================================
 
 /**
- * REQUEST REGISTRATION OTP (Twilio SMS)
+ * REQUEST REGISTRATION OTP (SMS Orbis)
  * POST /api/auth/register-otp-request
  * Body: { phoneNumber, name, password }
  */
@@ -551,7 +551,7 @@ app.post(['/api/auth/register-otp-verify', '/auth/register-otp-verify'], async (
 });
 
 /**
- * REQUEST FORGOT PASSWORD OTP (Twilio SMS)
+ * REQUEST FORGOT PASSWORD OTP (SMS Orbis)
  * POST /api/auth/forgot-password-request
  * Body: { phoneNumber }
  */
@@ -634,7 +634,7 @@ app.post(['/api/auth/forgot-password-verify', '/auth/forgot-password-verify'], a
 });
 
 /**
- * RESEND OTP (Twilio SMS)
+ * RESEND OTP (SMS Orbis)
  * POST /api/auth/resend-otp
  * Body: { phoneNumber, type }
  */
